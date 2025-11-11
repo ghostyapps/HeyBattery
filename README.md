@@ -9,6 +9,10 @@ A beautiful and minimalist Android app to track your battery statistics and esti
 - **Historical Data Tracking** - Stores up to 30 charge cycles in JSON format
 - **Dark Mode Support** - Automatically adapts to your device theme
 
+## Screenshots
+
+![DarkMode](./HeyBattery_DarkMode.png) ![LightMode](./HeyBattery_LightMode.png)
+
 
 ## How It Works
 
