@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_vertical"
+        android:layout_gravity="center_vertical">
+
+        <!-- Greeting with battery icon -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="40dp">
+            
+            <TextView
+                android:id="@+id/greetingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hey "
+                android:textSize="36sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_black"/>
+            
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/battery_icon"
+                android:layout_marginStart="-4dp"/>
+        </LinearLayout>
+
+        <!-- Battery Percentage -->
+        <TextView
+            android:id="@+id/batteryPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="75%"
+            android:textSize="72sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_black"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="is your current battery level."
+            android:textSize="18sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_bold"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Time Since Last Full Charge -->
+        <TextView
+            android:id="@+id/timeSinceCharge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10 hours and 47 minutes"
+            android:textSize="32sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_black"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="have passed since last full charge."
+            android:textSize="18sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_bold"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Estimated Remaining Time Label -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Estimated remaining time:"
+            android:textSize="18sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_bold"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Estimated Remaining Time -->
+        <TextView
+            android:id="@+id/remainingTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="16 hours and 32 minutes"
+            android:textSize="32sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_black"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Battery Health -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your battery health is"
+            android:textSize="18sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_bold"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/batteryHealth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Good."
+            android:textSize="32sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_black"/>
+
+    </LinearLayout>
+</ScrollView>
