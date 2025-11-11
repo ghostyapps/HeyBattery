@@ -11,7 +11,7 @@ A beautiful and minimalist Android app to track your battery statistics and esti
 
 ## Screenshots
 
-![DarkMode](./HeyBattery_DarkMode.png) ![LightMode](./HeyBattery_LightMode.png)
+![DarkMode](./HeyBattery_Screenshots.png)
 
 
 ## How It Works
