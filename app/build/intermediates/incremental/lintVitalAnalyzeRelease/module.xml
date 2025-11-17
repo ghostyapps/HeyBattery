@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/Users/dogukancandan/Documents/BatteryStatsv3/app"
+    name=":app"
+    type="APP"
+    maven="BatteryStats:app:unspecified"
+    agpVersion="8.7.3"
+    buildFolder="build"
+    bootClassPath="/Users/dogukancandan/Library/Android/sdk/platforms/android-34/android.jar:/Users/dogukancandan/Library/Android/sdk/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="1.8"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

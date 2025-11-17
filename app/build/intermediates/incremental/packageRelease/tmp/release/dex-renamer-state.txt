@@ -1,0 +1,4 @@
+#Sun Nov 16 19:02:48 TRT 2025
+base.0=/Users/dogukancandan/Documents/BatteryStatsv3/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

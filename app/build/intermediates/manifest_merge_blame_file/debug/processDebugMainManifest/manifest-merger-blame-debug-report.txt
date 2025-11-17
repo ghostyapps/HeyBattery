@@ -1,0 +1,193 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.batterystats"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="34" />
+10
+11    <!-- Permission to ignore battery optimizations so the app can track accurately -->
+12    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+12-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:7:5-95
+12-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:7:22-92
+13
+14    <!-- Permission to access usage statistics -->
+15    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+15-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:10:5-11:47
+15-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:10:22-75
+16
+17    <!-- Permission to read battery stats -->
+18    <uses-permission
+18-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:14:5-15:70
+19        android:name="android.permission.BATTERY_STATS"
+19-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:14:22-69
+20        android:protectionLevel="signature|privileged|development" />
+20-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:15:9-67
+21
+22    <!-- Permission to start service on boot -->
+23    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+23-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:18:5-81
+23-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:18:22-78
+24
+25    <!-- Permission for foreground service -->
+26    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+26-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:21:5-77
+26-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:21:22-74
+27    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+27-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:22:5-89
+27-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:22:22-86
+28
+29    <permission
+29-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:22:5-24:47
+30        android:name="com.example.batterystats.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+30-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:23:9-81
+31        android:protectionLevel="signature" />
+31-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:24:9-44
+32
+33    <uses-permission android:name="com.example.batterystats.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+33-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:26:5-97
+33-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:26:22-94
+34
+35    <application
+35-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:24:5-62:19
+36        android:allowBackup="true"
+36-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:25:9-35
+37        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+37-->[androidx.core:core:1.9.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/389adb4e770e5e4148cf28993963ca3b/transformed/core-1.9.0/AndroidManifest.xml:28:18-86
+38        android:debuggable="true"
+39        android:extractNativeLibs="false"
+40        android:icon="@mipmap/ic_launcher"
+40-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:26:9-43
+41        android:label="@string/app_name"
+41-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:27:9-41
+42        android:roundIcon="@mipmap/ic_launcher_round"
+42-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:28:9-54
+43        android:supportsRtl="true"
+43-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:29:9-35
+44        android:testOnly="true"
+45        android:theme="@style/Theme.BatteryStats" >
+45-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:30:9-50
+46        <activity
+46-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:32:9-39:20
+47            android:name="com.example.batterystats.MainActivity"
+47-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:33:13-41
+48            android:exported="true" >
+48-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:34:13-36
+49            <intent-filter>
+49-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:35:13-38:29
+50                <action android:name="android.intent.action.MAIN" />
+50-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:36:17-69
+50-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:36:25-66
+51
+52                <category android:name="android.intent.category.LAUNCHER" />
+52-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:37:17-77
+52-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:37:27-74
+53            </intent-filter>
+54        </activity>
+55
+56        <!-- Background service for battery monitoring -->
+57        <service
+57-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:42:9-50:19
+58            android:name="com.example.batterystats.BatteryMonitorService"
+58-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:43:13-50
+59            android:enabled="true"
+59-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:44:13-35
+60            android:exported="false"
+60-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:45:13-37
+61            android:foregroundServiceType="specialUse" >
+61-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:46:13-55
+62            <property
+62-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:47:13-49:69
+63                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+63-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:48:17-76
+64                android:value="Battery monitoring for statistics" />
+64-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:49:17-66
+65        </service>
+66
+67        <!-- Boot receiver to start service after device restart -->
+68        <receiver
+68-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:53:9-60:20
+69            android:name="com.example.batterystats.BootReceiver"
+69-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:54:13-41
+70            android:enabled="true"
+70-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:55:13-35
+71            android:exported="true" >
+71-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:56:13-36
+72            <intent-filter>
+72-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:57:13-59:29
+73                <action android:name="android.intent.action.BOOT_COMPLETED" />
+73-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:58:17-79
+73-->/Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:58:25-76
+74            </intent-filter>
+75        </receiver>
+76
+77        <provider
+77-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+78            android:name="androidx.startup.InitializationProvider"
+78-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+79            android:authorities="com.example.batterystats.androidx-startup"
+79-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+80            android:exported="false" >
+80-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+81            <meta-data
+81-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+82                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+82-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+83                android:value="androidx.startup" />
+83-->[androidx.emoji2:emoji2:1.2.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/26edba33bf9793abef79aaf93d4ec39c/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+84            <meta-data
+84-->[androidx.lifecycle:lifecycle-process:2.6.1] /Users/dogukancandan/.gradle/caches/8.13/transforms/05da007be4134f4b06edc95ed40aef8c/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:29:13-31:52
+85                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+85-->[androidx.lifecycle:lifecycle-process:2.6.1] /Users/dogukancandan/.gradle/caches/8.13/transforms/05da007be4134f4b06edc95ed40aef8c/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:30:17-78
+86                android:value="androidx.startup" />
+86-->[androidx.lifecycle:lifecycle-process:2.6.1] /Users/dogukancandan/.gradle/caches/8.13/transforms/05da007be4134f4b06edc95ed40aef8c/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:31:17-49
+87            <meta-data
+87-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+88                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+88-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+89                android:value="androidx.startup" />
+89-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+90        </provider>
+91
+92        <receiver
+92-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+93            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+93-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+94            android:directBootAware="false"
+94-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+95            android:enabled="true"
+95-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+96            android:exported="true"
+96-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+97            android:permission="android.permission.DUMP" >
+97-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+98            <intent-filter>
+98-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+99                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+99-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+99-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+100            </intent-filter>
+101            <intent-filter>
+101-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+102                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+102-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+103            </intent-filter>
+104            <intent-filter>
+104-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+105                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+105-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+105-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+106            </intent-filter>
+107            <intent-filter>
+107-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+108                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+108-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+108-->[androidx.profileinstaller:profileinstaller:1.3.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/d7eb6ae78389dce5e4b43ceb74bb9f73/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+109            </intent-filter>
+110        </receiver>
+111    </application>
+112
+113</manifest>
