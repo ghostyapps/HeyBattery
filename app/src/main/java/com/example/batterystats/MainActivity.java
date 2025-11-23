@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_BASE_DEEP_SLEEP = "base_deep_sleep";
     private static final String KEY_BASE_DEEP_SLEEP_ELAPSED = "base_deep_sleep_elapsed";
     private static final String KEY_WAS_FULL = "was_full";
+    private static final String KEY_PREV_CHARGING = "prev_charging";
     private static final int REQUEST_BATTERY_OPTIMIZATION = 1001;
     private static final int REQUEST_USAGE_STATS = 1002;
 
@@ -266,18 +267,7 @@ public class MainActivity extends AppCompatActivity {
         // Update battery percentage
         batteryPercentage.setText(String.format("%.0f%%", batteryPct));
 
-        // Update time since last full charge
         long lastFullCharge = prefs.getLong(KEY_LAST_FULL_CHARGE, 0);
-        if (lastFullCharge > 0) {
-            long timeDiff = System.currentTimeMillis() - lastFullCharge;
-            String timeString = formatTimeDuration(timeDiff);
-            timeSinceCharge.setText(timeString);
-
-            // Update current cycle data
-            dataManager.updateCurrentCycle(System.currentTimeMillis(), (int) batteryPct);
-        } else {
-            timeSinceCharge.setText("No data yet");
-        }
 
         // --- Deep Sleep Calculation (since >80% charge) ---
         long currentElapsed = SystemClock.elapsedRealtime();
@@ -291,7 +281,28 @@ public class MainActivity extends AppCompatActivity {
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
 
-        // Set baseline only once per charge cycle when we first reach >=80% while charging
+        boolean prevCharging = prefs.getBoolean(KEY_PREV_CHARGING, false);
+
+        // If a new charging session starts
+        if (isCharging && !prevCharging) {
+            if (batteryPct >= 80) {
+                // Already >=80% at plug-in: treat as reached >=80% now
+                prefs.edit()
+                        .putBoolean(KEY_WAS_FULL, true)
+                        .putLong(KEY_BASE_DEEP_SLEEP, currentDeep)
+                        .putLong(KEY_BASE_DEEP_SLEEP_ELAPSED, currentElapsed)
+                        .apply();
+                baseDeep = currentDeep;
+                baseElapsed = currentElapsed;
+                wasFull = true;
+            } else {
+                // New session below 80%
+                prefs.edit().putBoolean(KEY_WAS_FULL, false).apply();
+                wasFull = false;
+            }
+        }
+
+        // Set baseline once per session when we first reach >=80% while charging
         if (batteryPct >= 80 && isCharging && !wasFull) {
             prefs.edit()
                     .putBoolean(KEY_WAS_FULL, true)
@@ -300,9 +311,34 @@ public class MainActivity extends AppCompatActivity {
                     .apply();
             baseDeep = currentDeep;
             baseElapsed = currentElapsed;
-        } else if (!isCharging && wasFull) {
-            // Reset for next charge cycle
-            prefs.edit().putBoolean(KEY_WAS_FULL, false).apply();
+            wasFull = true;
+        }
+
+        // If charging session ends (unplug) after reaching >=80%, record a new baseline time
+        if (!isCharging && prevCharging && wasFull) {
+            long now = System.currentTimeMillis();
+            prefs.edit()
+                    .putBoolean(KEY_WAS_FULL, false)
+                    .putLong(KEY_LAST_FULL_CHARGE, now)
+                    .putInt(KEY_CHARGE_START_LEVEL, Math.round(batteryPct))
+                    .apply();
+            wasFull = false;
+            lastFullCharge = now; // update local copy so UI resets immediately
+        }
+
+        // Persist current charging state
+        prefs.edit().putBoolean(KEY_PREV_CHARGING, isCharging).apply();
+
+        // Update time since last >=80% charge (after possible baseline change)
+        if (lastFullCharge > 0) {
+            long timeDiff = System.currentTimeMillis() - lastFullCharge;
+            String timeString = formatTimeDuration(timeDiff);
+            timeSinceCharge.setText(timeString);
+
+            // Update current cycle data
+            dataManager.updateCurrentCycle(System.currentTimeMillis(), (int) batteryPct);
+        } else {
+            timeSinceCharge.setText("No data yet");
         }
 
         long deepSince80 = (baseDeep > 0) ? (currentDeep - baseDeep) : 0;
@@ -314,8 +350,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (deepSleepTime != null) {
-            if (deepSince80 <= 0) {
+            if (baseDeep <= 0) {
+                // No baseline yet
                 deepSleepTime.setText("No data yet");
+            } else if (deepSince80 <= 0) {
+                // Baseline exists but no deep sleep accumulated
+                deepSleepTime.setText("0 minutes");
             } else {
                 deepSleepTime.setText(formatTimeDuration(deepSince80));
             }
