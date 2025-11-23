@@ -1,44 +1,78 @@
-# Battery Stats App
+# HeyBattery – Simple, Smart Battery Tracking
 
-A simple Android battery statistics application that displays:
-- Current battery percentage
-- Time elapsed since last full charge
-- Estimated remaining battery time
-- Battery health status
+HeyBattery is a lightweight and privacy-friendly Android battery companion that helps you understand your device’s power usage without unnecessary permissions or background services.
 
-## Features
+It focuses on clarity, simplicity, and meaningful battery insights.
 
-- Clean, text-focused interface matching the design from HeyBattery
-- Real-time battery monitoring
-- Automatic tracking of full charge cycles
-- Battery drain rate calculation for time estimates
-- Battery health status display
+---
 
-## How It Works
+## 🔋 Features
 
-### Battery Tracking
-- The app monitors battery status using Android's `BatteryManager`
-- When the battery reaches 80-100% while charging, it records this as a "full charge"
-- The timestamp is saved using SharedPreferences for persistence
+### ✔ Current Battery Percentage
+Displays your real-time battery percentage in a clean, minimal UI.
 
-### Time Calculations
-- **Time Since Charge:** Calculated from the saved full charge timestamp
-- **Remaining Time:** Estimated based on current battery drain rate
-  - Drain rate = (Battery used) / (Time elapsed)
-  - Remaining time = (Current battery) / (Drain rate)
+### ✔ Time Since Last ≥80% Charge
+HeyBattery automatically detects the moment your device reaches **80% or above while charging**, then begins tracking how much time has passed since that moment.
 
+This gives you a realistic look at your battery cycle usage.
 
-## Notes
+### ✔ Deep Sleep Tracking
+Uses the Android formula:
 
-- The app needs to observe at least one full charge cycle to start tracking accurately
-- Battery time estimates improve in accuracy after a few charge/discharge cycles
-- The app updates battery information in real-time while running
+elapsedRealtime - uptimeMillis
 
+This tells you how long your phone has actually been in **deep sleep** (CPU fully idle) since the last ≥80% charge.
 
-## Customization
+If the screen is off but an app keeps your CPU active, deep sleep **does not increase** — a great way to detect background drain.
 
-You can easily customize:
-- **Colors:** Edit `res/values/colors.xml`
-- **Text sizes:** Modify `textSize` attributes in `activity_main.xml`
-- **App name:** Change in `res/values/strings.xml`
-- **Theme:** Adjust in `res/values/themes.xml`
+### ✔ Estimated Remaining Time
+Estimates how long the device may run based on:
+
+- Your previous usage patterns  
+- Current battery percentage  
+- Recent cycle behavior  
+
+Updated continuously in real time.
+
+### ✔ Full Light/Dark Theme Support
+The entire UI — background, text, header, icons, and system bars — follows the system theme using Android’s DayNight system.
+
+### ✔ Clean, No-Nonsense UI
+No ads.  
+No analytics.  
+No unnecessary permissions.  
+No background battery drain.
+
+---
+
+## 🖥 Screenshots
+![HeyBattery Screenshot](HeyBattery_Screenshots.jpg)
+
+---
+
+## 📦 Download
+You can download the latest signed APK from:
+
+👉 **[Releases](../../releases/latest)**
+
+---
+
+## 🛠 Tech Stack
+
+- **Android Studio / Kotlin (or Java if applicable)**
+- Material Components
+- ConstraintLayout UI
+- SharedPreferences for persistent tracking
+- BatteryManager API
+
+---
+
+## ⚙️ How It Works
+
+### Battery Percentage
+Polled via `ACTION_BATTERY_CHANGED`.
+
+### Deep Sleep
+Calculated using:
+```java
+SystemClock.elapsedRealtime() - SystemClock.uptimeMillis();
