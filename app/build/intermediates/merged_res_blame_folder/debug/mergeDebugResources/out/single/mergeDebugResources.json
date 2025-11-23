@@ -60,6 +60,10 @@
         "source": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-main-33:/mipmap-xhdpi/ic_launcher.png"
     },
     {
+        "merged": "com.example.batterystats.app-debug-31:/layout_activity_about.xml.flat",
+        "source": "com.example.batterystats.app-main-33:/layout/activity_about.xml"
+    },
+    {
         "merged": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-debug-31:/layout_activity_main.xml.flat",
         "source": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-main-33:/layout/activity_main.xml"
     },
@@ -68,7 +72,7 @@
         "source": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-main-33:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.example.batterystats.app-debug-31:/layout_activity_main.xml.flat",
-        "source": "com.example.batterystats.app-main-33:/layout/activity_main.xml"
+        "merged": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-debug-31:/layout_activity_about.xml.flat",
+        "source": "/Users/dogukancandan/.gradle/daemon/8.13/com.example.batterystats.app-main-33:/layout/activity_about.xml"
     }
 ]

@@ -10,7 +10,7 @@
         <item name="colorSecondaryVariant">#E6A800</item>
         <item name="colorOnSecondary">#000000</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/background_color</item>
+        <item name="android:statusBarColor">@color/header_background</item>
         <item name="android:windowLightStatusBar">false</item>
         <!-- Navigation bar color. -->
         <item name="android:navigationBarColor">@color/background_color</item>

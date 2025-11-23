@@ -81,6 +81,26 @@
                 android:fontFamily="@font/productsans_bold"
                 android:layout_marginBottom="40dp"/>
 
+            <!-- Deep Sleep Time Since >80% Charge -->
+            <TextView
+                android:id="@+id/deepSleepTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No data yet"
+                android:textSize="32sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_black"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="deep sleep since >80% charge."
+                android:textSize="18sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_bold"
+                android:layout_marginBottom="40dp"/>
+
             <!-- Estimated Remaining Time Label -->
             <TextView
                 android:layout_width="wrap_content"
@@ -96,21 +116,11 @@
                 android:id="@+id/remainingTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="16 hours and 32 minutes"
+                android:text="Calculating..."
                 android:textSize="32sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_black"
                 android:layout_marginBottom="40dp"/>
-
-            <!-- Battery Health -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Your battery health is"
-                android:textSize="18sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="8dp"/>
 
             <TextView
                 android:id="@+id/batteryHealth"

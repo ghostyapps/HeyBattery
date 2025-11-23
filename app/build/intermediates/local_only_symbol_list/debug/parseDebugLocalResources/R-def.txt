@@ -2,6 +2,7 @@ R_DEF: Internal format may change without notice
 local
 color background_color
 color black
+color header_background
 color ic_launcher_background
 color purple_200
 color purple_500
@@ -14,12 +15,18 @@ drawable battery_icon
 drawable ic_launcher_foreground
 font productsans_black
 font productsans_bold
-id batteryHealth
+id aboutButton
+id aboutHeader
+id aboutHeaderLogo
+id aboutText
+id aboutTitle
 id batteryPercentage
+id deepSleepTime
 id headerLogo
 id headerSection
 id remainingTime
 id timeSinceCharge
+layout activity_about
 layout activity_main
 mipmap ic_launcher
 mipmap ic_launcher_round

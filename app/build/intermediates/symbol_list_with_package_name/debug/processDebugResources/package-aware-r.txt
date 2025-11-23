@@ -1413,6 +1413,7 @@ color error_color_material_dark
 color error_color_material_light
 color foreground_material_dark
 color foreground_material_light
+color header_background
 color highlighted_text_material_dark
 color highlighted_text_material_light
 color ic_launcher_background
@@ -3065,6 +3066,11 @@ id SHOW_PROGRESS
 id SYM
 id TOP_END
 id TOP_START
+id aboutButton
+id aboutHeader
+id aboutHeaderLogo
+id aboutText
+id aboutTitle
 id accelerate
 id accessibility_action_clickable_span
 id accessibility_custom_action_0
@@ -3140,7 +3146,6 @@ id autoCompleteToEnd
 id autoCompleteToStart
 id barrier
 id baseline
-id batteryHealth
 id batteryPercentage
 id beginOnFirstDraw
 id beginning
@@ -3194,6 +3199,7 @@ id date_picker_actions
 id decelerate
 id decelerateAndComplete
 id decor_content_parent
+id deepSleepTime
 id default_activity_button
 id deltaRelative
 id dependency_ordering
@@ -3665,6 +3671,7 @@ layout abc_search_dropdown_item_icons_2line
 layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
+layout activity_about
 layout activity_main
 layout custom_dialog
 layout design_bottom_navigation_item

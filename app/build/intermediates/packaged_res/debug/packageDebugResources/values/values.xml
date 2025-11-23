@@ -2,6 +2,7 @@
 <resources>
     <color name="background_color">#FFFFFF</color>
     <color name="black">#FF000000</color>
+    <color name="header_background">#FFF4F4F4</color>
     <color name="ic_launcher_background">#000000</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
@@ -21,7 +22,7 @@
         <item name="colorSecondaryVariant">#E6A800</item>
         <item name="colorOnSecondary">#000000</item>
         
-        <item name="android:statusBarColor">@color/background_color</item>
+        <item name="android:statusBarColor">@color/header_background</item>
         <item name="android:windowLightStatusBar">true</item>
         
         <item name="android:navigationBarColor">@color/background_color</item>

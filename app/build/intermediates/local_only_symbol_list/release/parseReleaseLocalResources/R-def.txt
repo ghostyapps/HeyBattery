@@ -16,6 +16,7 @@ font productsans_black
 font productsans_bold
 id batteryHealth
 id batteryPercentage
+id deepSleepTime
 id headerLogo
 id headerSection
 id remainingTime

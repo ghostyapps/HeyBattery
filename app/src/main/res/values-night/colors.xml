@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Dark theme colors -->
-    <color name="background_color">#000000</color>
+    <color name="background_color">#212121</color>
     <color name="text_color">#FFFFFF</color>
+    <color name="header_background">#181818</color>
 </resources>

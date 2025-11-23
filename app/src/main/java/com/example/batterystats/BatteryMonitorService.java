@@ -16,6 +16,7 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import java.util.concurrent.TimeUnit;
+import android.os.SystemClock;
 
 public class BatteryMonitorService extends Service {
 
@@ -23,12 +24,13 @@ public class BatteryMonitorService extends Service {
     private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
     private static final String KEY_CHARGE_START_LEVEL = "charge_start_level";
     private static final String KEY_WAS_FULL = "was_full"; // Track if battery reached 100%
+    private static final String KEY_BASE_DEEP_SLEEP = "base_deep_sleep";
     private static final String CHANNEL_ID = "BatteryMonitorChannel";
     private static final int NOTIFICATION_ID = 1;
-    
+
     private SharedPreferences prefs;
     private BatteryDataManager dataManager;
-    
+
     private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -41,13 +43,13 @@ public class BatteryMonitorService extends Service {
         super.onCreate();
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         dataManager = new BatteryDataManager(this);
-        
+
         // Create notification channel for Android 8.0+
         createNotificationChannel();
-        
+
         // Start as foreground service
         startForeground(NOTIFICATION_ID, createNotification());
-        
+
         // Register battery receiver
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
@@ -61,7 +63,7 @@ public class BatteryMonitorService extends Service {
         if (batteryStatus != null) {
             checkBatteryStatus(batteryStatus);
         }
-        
+
         // Service will restart if killed by system
         return START_STICKY;
     }
@@ -81,7 +83,7 @@ public class BatteryMonitorService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-    
+
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -91,14 +93,14 @@ public class BatteryMonitorService extends Service {
             );
             channel.setDescription("Monitors battery status for statistics");
             channel.setShowBadge(false);
-            
+
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
         }
     }
-    
+
     private Notification createNotification() {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
@@ -107,7 +109,7 @@ public class BatteryMonitorService extends Service {
             notificationIntent,
             PendingIntent.FLAG_IMMUTABLE
         );
-        
+
         return new NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("HeyBattery")
             .setContentText("Monitoring battery status")
@@ -122,16 +124,19 @@ public class BatteryMonitorService extends Service {
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         float batteryPct = (level / (float) scale) * 100;
-        
+
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                            status == BatteryManager.BATTERY_STATUS_FULL;
-        
+
         boolean wasFull = prefs.getBoolean(KEY_WAS_FULL, false);
-        
+
         // Step 1: Mark that battery reached 100% while charging
         if (batteryPct >= 80 && isCharging) {
             prefs.edit().putBoolean(KEY_WAS_FULL, true).apply();
+
+            long currentDeep = SystemClock.elapsedRealtime() - SystemClock.uptimeMillis();
+            prefs.edit().putLong(KEY_BASE_DEEP_SLEEP, currentDeep).apply();
         }
         
         // Step 2: When unplugged after being full, start the timer

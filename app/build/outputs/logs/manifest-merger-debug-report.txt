@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-64:12
-INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-64:12
-INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-64:12
-INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-64:12
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-67:12
+INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:2:1-67:12
 MERGED from [com.google.android.material:material:1.10.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/63bd4068eece07eaf87746e329fa08ae/transformed/material-1.10.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /Users/dogukancandan/.gradle/caches/8.13/transforms/81cc442670f2208e083b1c9e8736ff57/transformed/constraintlayout-2.1.4/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /Users/dogukancandan/.gradle/caches/8.13/transforms/f1e2b6ecea9cb78ad99292917f12e72c/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -85,8 +85,8 @@ ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidMan
 	android:name
 		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:22:22-86
 application
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:24:5-62:19
-INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:24:5-62:19
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:24:5-65:19
+INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:24:5-65:19
 MERGED from [com.google.android.material:material:1.10.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/63bd4068eece07eaf87746e329fa08ae/transformed/material-1.10.0/AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.10.0] /Users/dogukancandan/.gradle/caches/8.13/transforms/63bd4068eece07eaf87746e329fa08ae/transformed/material-1.10.0/AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /Users/dogukancandan/.gradle/caches/8.13/transforms/81cc442670f2208e083b1c9e8736ff57/transformed/constraintlayout-2.1.4/AndroidManifest.xml:9:5-20
@@ -135,36 +135,42 @@ category#android.intent.category.LAUNCHER
 ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:37:17-77
 	android:name
 		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:37:27-74
+activity#com.example.batterystats.AboutActivity
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:40:9-42:40
+	android:exported
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:42:13-37
+	android:name
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:41:13-42
 service#com.example.batterystats.BatteryMonitorService
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:42:9-50:19
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:45:9-53:19
 	android:enabled
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:44:13-35
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:47:13-35
 	android:exported
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:45:13-37
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:48:13-37
 	android:foregroundServiceType
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:46:13-55
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:49:13-55
 	android:name
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:43:13-50
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:46:13-50
 property#android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:47:13-49:69
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:50:13-52:69
 	android:value
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:49:17-66
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:52:17-66
 	android:name
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:48:17-76
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:51:17-76
 receiver#com.example.batterystats.BootReceiver
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:53:9-60:20
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:56:9-63:20
 	android:enabled
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:55:13-35
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:58:13-35
 	android:exported
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:56:13-36
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:59:13-36
 	android:name
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:54:13-41
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:57:13-41
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:57:13-59:29
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:60:13-62:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:58:17-79
+ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:61:17-79
 	android:name
-		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:58:25-76
+		ADDED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml:61:25-76
 uses-sdk
 INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/dogukancandan/Documents/BatteryStatsv3/app/src/main/AndroidManifest.xml

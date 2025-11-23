@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:minHeight="200dp"
             android:orientation="vertical"
-            android:background="#FFF4F4F4"
+            android:background="@color/header_background"
             android:gravity="center"
             android:paddingLeft="24dp"
             android:paddingRight="24dp"
@@ -81,6 +81,26 @@
                 android:fontFamily="@font/productsans_bold"
                 android:layout_marginBottom="40dp"/>
 
+            <!-- Deep Sleep Time Since >80% Charge -->
+            <TextView
+                android:id="@+id/deepSleepTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No data yet"
+                android:textSize="32sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_black"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="deep sleep since >80% charge."
+                android:textSize="18sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_bold"
+                android:layout_marginBottom="40dp"/>
+
             <!-- Estimated Remaining Time Label -->
             <TextView
                 android:layout_width="wrap_content"
@@ -96,31 +116,25 @@
                 android:id="@+id/remainingTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="16 hours and 32 minutes"
+                android:text="Calculating..."
                 android:textSize="32sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_black"
                 android:layout_marginBottom="40dp"/>
 
-            <!-- Battery Health -->
+            <!-- About HeyBattery -->
             <TextView
+                android:id="@+id/aboutButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your battery health is"
+                android:text="About HeyBattery"
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="8dp"/>
-
-            <TextView
-                android:id="@+id/batteryHealth"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Good."
-                android:textSize="32sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_black"/>
-
+                android:layout_marginTop="16dp"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -1412,6 +1412,7 @@ int color error_color_material_dark 0x7f050059
 int color error_color_material_light 0x7f05005a
 int color foreground_material_dark 0x7f05005b
 int color foreground_material_light 0x7f05005c
+int color header_background 0x7f0502ef
 int color highlighted_text_material_dark 0x7f05005d
 int color highlighted_text_material_light 0x7f05005e
 int color ic_launcher_background 0x7f05005f
@@ -3064,6 +3065,11 @@ int id SHOW_PROGRESS 0x7f09000a
 int id SYM 0x7f09000b
 int id TOP_END 0x7f09000c
 int id TOP_START 0x7f09000d
+int id aboutButton 0x7f0901fa
+int id aboutHeader 0x7f0901fd
+int id aboutHeaderLogo 0x7f0901fe
+int id aboutText 0x7f0901fb
+int id aboutTitle 0x7f0901fc
 int id accelerate 0x7f09000e
 int id accessibility_action_clickable_span 0x7f09000f
 int id accessibility_custom_action_0 0x7f090010
@@ -3139,7 +3145,6 @@ int id autoCompleteToEnd 0x7f090055
 int id autoCompleteToStart 0x7f090056
 int id barrier 0x7f090057
 int id baseline 0x7f090058
-int id batteryHealth 0x7f090059
 int id batteryPercentage 0x7f09005a
 int id beginOnFirstDraw 0x7f09005b
 int id beginning 0x7f09005c
@@ -3193,6 +3198,7 @@ int id date_picker_actions 0x7f09008b
 int id decelerate 0x7f09008c
 int id decelerateAndComplete 0x7f09008d
 int id decor_content_parent 0x7f09008e
+int id deepSleepTime 0x7f0901f9
 int id default_activity_button 0x7f09008f
 int id deltaRelative 0x7f090090
 int id dependency_ordering 0x7f090091
@@ -3664,6 +3670,7 @@ int layout abc_search_dropdown_item_icons_2line 0x7f0c0018
 int layout abc_search_view 0x7f0c0019
 int layout abc_select_dialog_material 0x7f0c001a
 int layout abc_tooltip 0x7f0c001b
+int layout activity_about 0x7f0c006a
 int layout activity_main 0x7f0c001c
 int layout custom_dialog 0x7f0c001d
 int layout design_bottom_navigation_item 0x7f0c001e
