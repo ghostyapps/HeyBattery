@@ -321,7 +321,11 @@ public class MainActivity extends AppCompatActivity {
                     .putBoolean(KEY_WAS_FULL, false)
                     .putLong(KEY_LAST_FULL_CHARGE, now)
                     .putInt(KEY_CHARGE_START_LEVEL, Math.round(batteryPct))
+                    .putLong(KEY_BASE_DEEP_SLEEP, currentDeep)
+                    .putLong(KEY_BASE_DEEP_SLEEP_ELAPSED, currentElapsed)
                     .apply();
+            baseDeep = currentDeep;
+            baseElapsed = currentElapsed;
             wasFull = false;
             lastFullCharge = now; // update local copy so UI resets immediately
         }
