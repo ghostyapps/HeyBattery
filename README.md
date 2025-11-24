@@ -1,6 +1,6 @@
 # HeyBattery
 
-![Screenshot](HeyBattery_Screenshots.png)
+![Screenshot](HeyBattery_Screenshots_3.png)
 
 A lightweight Android app that tracks your battery usage and charging behavior.
 
