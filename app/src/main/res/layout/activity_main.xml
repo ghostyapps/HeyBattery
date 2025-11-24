@@ -59,7 +59,7 @@
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="40dp"/>
+                android:layout_marginBottom="30dp"/>
 
             <!-- Time Since Last Full Charge -->
             <TextView
@@ -79,7 +79,7 @@
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="40dp"/>
+                android:layout_marginBottom="30dp"/>
 
             <!-- Deep Sleep Time Since >80% Charge -->
             <TextView
@@ -99,7 +99,7 @@
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="40dp"/>
+                android:layout_marginBottom="30dp"/>
 
             <!-- Estimated Remaining Time Label -->
             <TextView
@@ -120,7 +120,29 @@
                 android:textSize="32sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="40dp"/>
+                android:layout_marginBottom="30dp"/>
+
+            <!-- Charging Info Label -->
+            <TextView
+                android:id="@+id/chargingInfoLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Charging info:"
+                android:textSize="18sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_bold"
+                android:layout_marginBottom="0dp"/>
+
+            <!-- Charging Info Value -->
+            <TextView
+                android:id="@+id/chargingInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="discharging"
+                android:textSize="32sp"
+                android:textColor="@color/text_color"
+                android:fontFamily="@font/productsans_black"
+                android:layout_marginBottom="24dp"/>
 
             <!-- About HeyBattery -->
             <TextView

@@ -27,6 +27,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import android.os.SystemClock;
+import android.os.Handler;
+import android.os.Looper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +37,35 @@ public class MainActivity extends AppCompatActivity {
     private TextView remainingTime;
     private ImageView headerLogo;
     private TextView deepSleepTime;
+    private TextView chargingInfo;
+    // Charging info toggle state: 0=Watts, 1=Volts, 2=mA
+    private int chargingInfoMode = 0;
+    private int lastVoltageMv = -1;
+    private int lastCurrentMicroA = 0;
+    private double lastWatts = -1;
+    private boolean lastIsCharging = false;
+
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+    private final Runnable uiUpdater = new Runnable() {
+        @Override
+        public void run() {
+            IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, filter);
+
+            boolean isChargingNow = false;
+            if (batteryStatus != null) {
+                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                isChargingNow = status == BatteryManager.BATTERY_STATUS_CHARGING
+                        || status == BatteryManager.BATTERY_STATUS_FULL;
+
+                updateBatteryInfo(batteryStatus);
+            }
+
+            // Dynamic refresh: 3s while charging (Watt), 60s otherwise (timers)
+            long nextDelay = isChargingNow ? 3_000 : 60_000;
+            uiHandler.postDelayed(this, nextDelay);
+        }
+    };
 
     // Easter egg variables
     private int tapCount = 0;
@@ -100,6 +131,13 @@ public class MainActivity extends AppCompatActivity {
         remainingTime = remainingTimeId != 0 ? findViewById(remainingTimeId) : null;
         headerLogo = findViewById(R.id.headerLogo);
         deepSleepTime = findViewById(R.id.deepSleepTime);
+        chargingInfo = findViewById(R.id.chargingInfo);
+        if (chargingInfo != null) {
+            chargingInfo.setOnClickListener(v -> {
+                chargingInfoMode = (chargingInfoMode + 1) % 3;
+                refreshChargingInfoText();
+            });
+        }
 
         dataManager = new BatteryDataManager(this);
 
@@ -144,9 +182,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        uiHandler.removeCallbacks(uiUpdater);
+        uiHandler.post(uiUpdater);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        uiHandler.removeCallbacks(uiUpdater);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(batteryReceiver);
+        uiHandler.removeCallbacks(uiUpdater);
     }
 
     private void checkPermissions() {
@@ -280,6 +332,15 @@ public class MainActivity extends AppCompatActivity {
         // Determine charging state
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
+
+        // Cache latest charging measurements for toggle display
+        lastIsCharging = isCharging;
+        lastVoltageMv = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        lastCurrentMicroA = (bm != null) ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) : 0;
+        lastWatts = computeWatts(lastVoltageMv, lastCurrentMicroA);
+
+        refreshChargingInfoText();
 
         boolean prevCharging = prefs.getBoolean(KEY_PREV_CHARGING, false);
 
@@ -434,6 +495,44 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void refreshChargingInfoText() {
+        if (chargingInfo == null) return;
+
+        if (!lastIsCharging) {
+            chargingInfo.setText("Discharging");
+            return;
+        }
+
+        if (chargingInfoMode == 0) {
+            if (lastWatts > 0) {
+                chargingInfo.setText(String.format("%.1f W", lastWatts));
+            } else {
+                chargingInfo.setText("charging");
+            }
+        } else if (chargingInfoMode == 1) {
+            if (lastVoltageMv > 0) {
+                chargingInfo.setText(String.format("%.2f V", lastVoltageMv / 1000.0));
+            } else {
+                chargingInfo.setText("N/A");
+            }
+        } else {
+            if (lastCurrentMicroA != 0) {
+                chargingInfo.setText(String.format("%d mA", Math.round(Math.abs(lastCurrentMicroA) / 1000.0f)));
+            } else {
+                chargingInfo.setText("N/A");
+            }
+        }
+    }
+
+    private double computeWatts(int voltageMv, int currentMicroA) {
+        if (voltageMv > 0 && currentMicroA != 0) {
+            double volts = voltageMv / 1000.0;
+            double amps = Math.abs(currentMicroA) / 1_000_000.0;
+            return volts * amps;
+        }
+        return -1;
+    }
+
 
     private void handleGreetingTap() {
         long currentTime = System.currentTimeMillis();
@@ -486,5 +585,22 @@ public class MainActivity extends AppCompatActivity {
                         androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
                 break;
         }
+    }
+
+    private double getChargingWatts(Intent intent) {
+        int voltageMv = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1); // millivolts
+
+        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        int currentMicroA = 0;
+        if (bm != null) {
+            currentMicroA = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+        }
+
+        if (voltageMv > 0 && currentMicroA != 0) {
+            double volts = voltageMv / 1000.0;
+            double amps = Math.abs(currentMicroA) / 1_000_000.0;
+            return volts * amps;
+        }
+        return -1;
     }
 }
