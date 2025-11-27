@@ -24,17 +24,43 @@
 
         <ImageView
             android:id="@+id/aboutHeaderLogo"
-            android:layout_width="128dp"
-            android:layout_height="128dp"
-            android:src="@drawable/battery_icon"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/battery_icon_cropped"
             android:contentDescription="About header logo" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp">
+
+            <ImageView
+                android:id="@+id/aboutBackButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="start|center_vertical"
+                android:src="@drawable/ic_back_arrow"
+                android:contentDescription="Back"
+                android:padding="4dp"
+                android:layout_marginStart="24dp" />
+
+            <TextView
+                android:id="@+id/aboutHeaderTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="About"
+                android:textSize="24sp"
+                android:fontFamily="@font/productsans_black"
+                android:textColor="@color/text_color" />
+        </FrameLayout>
     </LinearLayout>
 
     <TextView
         android:id="@+id/aboutTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="About HeyBattery"
+        android:text="What is HeyBattery?"
         android:textSize="28sp"
         android:textColor="@color/text_color"
         android:fontFamily="@font/productsans_black"
@@ -53,7 +79,7 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:textColor="@color/text_color"
-        android:fontFamily="@font/productsans_bold"
+        android:fontFamily="@font/productsans_medium"
         android:gravity="start"
         android:textAlignment="viewStart"
         android:justificationMode="inter_word"
@@ -69,10 +95,12 @@
         android:id="@+id/aboutContributors"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Contributors:\nB. Sun: for suggesting the Watt / Volt / mA charging info cycling feature."
+        android:text="Contributors:
+        \nB. Sun: for suggesting the Watt / Volt / mA charging info cycling feature.
+        \nŞ. Kuşçu: for helping to solve the correct algorithm on calculating the remaining time to 100%. "
         android:textSize="16sp"
         android:textColor="@color/text_color"
-        android:fontFamily="@font/productsans_bold"
+        android:fontFamily="@font/productsans_medium"
         android:gravity="start"
         android:textAlignment="viewStart"
         android:paddingStart="24dp"

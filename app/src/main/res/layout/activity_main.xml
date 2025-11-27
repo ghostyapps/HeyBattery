@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background_color"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="top"
         android:layout_gravity="top">
@@ -16,147 +18,285 @@
         <LinearLayout
             android:id="@+id/headerSection"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="200dp"
+            android:layout_height="290dp"
             android:orientation="vertical"
             android:background="@color/header_background"
             android:gravity="center"
             android:paddingLeft="24dp"
             android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
             android:layout_marginBottom="40dp">
 
             <ImageView
                 android:id="@+id/headerLogo"
-                android:layout_width="128dp"
-                android:layout_height="128dp"
-                android:src="@drawable/battery_icon"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/battery_icon_cropped"
                 android:layout_gravity="center_horizontal"
-                android:contentDescription="Header logo"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingLeft="32dp"
-            android:paddingRight="32dp"
-            android:paddingBottom="32dp">
+                android:contentDescription="@string/header_logo" />
 
             <TextView
                 android:id="@+id/batteryPercentage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="75%"
-                android:textSize="72sp"
+                android:text="@string/battery_level_placeholder"
+                android:textSize="92sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="8dp"/>
+                android:layout_gravity="center_horizontal" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="is your current battery level."
+                android:text="@string/current_battery_level"
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="30dp"/>
+                android:layout_gravity="center_horizontal" />
+        </LinearLayout>
 
-            <!-- Time Since Last Full Charge -->
-            <TextView
-                android:id="@+id/timeSinceCharge"
-                android:layout_width="wrap_content"
+        <!-- Main content -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="32dp"
+            android:clipToPadding="false"
+            android:clipChildren="false">
+
+            <!-- 2x2 Card Grid -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="10 hours and 47 minutes"
-                android:textSize="32sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="8dp"/>
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="have passed since >80% charge."
-                android:textSize="18sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="30dp"/>
+                <!-- First Row -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp">
 
-            <!-- Deep Sleep Time Since >80% Charge -->
-            <TextView
-                android:id="@+id/deepSleepTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No data yet"
-                android:textSize="32sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="8dp"/>
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_time_since_charge"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginEnd="10dp"
+                        app:cardCornerRadius="16dp"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/card_deep_sleep">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="deep sleep since >80% charge."
-                android:textSize="18sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="30dp"/>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-            <!-- Estimated Remaining Time Label -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Estimated remaining time:"
-                android:textSize="18sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="8dp"/>
+                            <!-- Title: Time since last >80% charge -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_bold"
+                                android:text="Time since last >80% charge:"
+                                android:textColor="@color/text_color"
+                                android:textSize="14sp"
+                                android:layout_marginBottom="4dp" />
 
-            <!-- Estimated Remaining Time -->
-            <TextView
-                android:id="@+id/remainingTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Calculating..."
-                android:textSize="32sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="30dp"/>
+                            <!-- Value: hours and minutes since last >80% charge -->
+                            <TextView
+                                android:id="@+id/timeSinceCharge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_black"
+                                android:text="@string/time_since_charge_placeholder"
+                                android:textColor="@color/text_color"
+                                android:textSize="20sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
 
-            <!-- Charging Info Label -->
-            <TextView
-                android:id="@+id/chargingInfoLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Charging info:"
-                android:textSize="18sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_bold"
-                android:layout_marginBottom="0dp"/>
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_deep_sleep"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:cardCornerRadius="16dp"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/card_time_since_charge"
+                        app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Charging Info Value -->
-            <TextView
-                android:id="@+id/chargingInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="discharging"
-                android:textSize="32sp"
-                android:textColor="@color/text_color"
-                android:fontFamily="@font/productsans_black"
-                android:layout_marginBottom="24dp"/>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
 
-            <!-- About HeyBattery -->
+                            <!-- Title: Deep sleep time since last charge -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_bold"
+                                android:text="Deep Sleep time since last charge:"
+                                android:textColor="@color/text_color"
+                                android:textSize="14sp"
+                                android:layout_marginBottom="4dp" />
+
+                            <!-- Value: deep sleep duration -->
+                            <TextView
+                                android:id="@+id/deepSleepTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_black"
+                                android:text="@string/no_data_yet"
+                                android:textColor="@color/text_color"
+                                android:textSize="20sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+                <!-- Second Row -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_estimated_time"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginEnd="10dp"
+                        app:cardCornerRadius="16dp"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/card_charging_info">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_bold"
+                                android:text="@string/estimated_remaining_time"
+                                android:textColor="@color/text_color"
+                                android:textSize="14sp"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:id="@+id/remainingTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/productsans_black"
+                                android:text="@string/not_available"
+                                android:textColor="@color/text_color"
+                                android:textSize="20sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/card_charging_info"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:cardCornerRadius="16dp"
+                        app:layout_constraintDimensionRatio="1:1"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/card_estimated_time"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="16dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/productsans_bold"
+                                    android:text="@string/charging_info"
+                                    android:textColor="@color/text_color"
+                                    android:textSize="14sp"
+                                    android:layout_marginBottom="4dp" />
+
+                                <TextView
+                                    android:id="@+id/chargingInfo"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/productsans_black"
+                                    android:text="@string/discharging"
+                                    android:textColor="@color/text_color"
+                                    android:textSize="20sp"
+                                    android:layout_marginBottom="4dp"/>
+
+                                <TextView
+                                    android:id="@+id/timeToFullText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/productsans_bold"
+                                    android:text="Full in --"
+                                    android:textColor="@color/text_color"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="4dp" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/chargingHintIcon"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_hand_point"
+                                android:layout_gravity="bottom|end"
+                                android:layout_marginEnd="8dp"
+                                android:layout_marginBottom="8dp"
+                                android:contentDescription="Clickable hint icon" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+
+            <!-- About Button -->
             <TextView
                 android:id="@+id/aboutButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🔴 About HeyBattery"
+                android:text="@string/about_heybattery"
                 android:textSize="18sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_bold"
-                android:layout_marginTop="16dp"
-                android:padding="0dp"
-                android:clickable="true"
-                android:focusable="true" />
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="16dp"
+                android:layout_gravity="center_horizontal" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/footerSignature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Made with ❤️ by GhostyApps"
+            android:textSize="12sp"
+            android:textColor="@color/text_color"
+            android:fontFamily="@font/productsans_bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:clickable="true"
+            android:focusable="true" />
     </LinearLayout>
 </ScrollView>

@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">HeyBattery</string>
+    <string name="header_logo">Header logo</string>
+    <string name="battery_level_placeholder">75%</string>
+    <string name="current_battery_level">is your current battery level.</string>
+    <string name="time_since_charge_placeholder">10 hours 47 minutes</string>
+    <string name="since_80_charge">since >80% charge</string>
+    <string name="no_data_yet">No data yet</string>
+    <string name="deep_sleep_since_80_charge">deep sleep since >80% charge</string>
+    <string name="estimated_remaining_time">Estimated remaining time</string>
+    <string name="not_available">Not available</string>
+    <string name="charging_info">Charging info</string>
+    <string name="discharging">Discharging</string>
+    <string name="about_heybattery">📎 About HeyBattery</string>
+    <string name="time_to_full_placeholder">1 hour 25 minutes to full</string>
 </resources>

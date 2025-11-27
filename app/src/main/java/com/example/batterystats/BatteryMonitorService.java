@@ -23,6 +23,7 @@ public class BatteryMonitorService extends Service {
     private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
     private static final String KEY_CHARGE_START_LEVEL = "charge_start_level";
     private static final String KEY_WAS_FULL = "was_full"; // Track if battery reached 100%
+    private static final String KEY_DEEP_SLEEP_BASE = "deep_sleep_base"; // Deep sleep baseline at last >80% charge
     private static final String CHANNEL_ID = "BatteryMonitorChannel";
     private static final int NOTIFICATION_ID = 1;
 
@@ -133,22 +134,29 @@ public class BatteryMonitorService extends Service {
         if (batteryPct >= 80 && isCharging) {
             prefs.edit().putBoolean(KEY_WAS_FULL, true).apply();
         }
-        
+
         // Step 2: When unplugged after being full, start the timer
         if (wasFull && !isCharging) {
             long currentTime = System.currentTimeMillis();
             long lastFullCharge = prefs.getLong(KEY_LAST_FULL_CHARGE, 0);
-            
+
             // Only update if it's been more than 1 hour since last cycle started
             if (currentTime - lastFullCharge > TimeUnit.HOURS.toMillis(1)) {
-                prefs.edit().putLong(KEY_LAST_FULL_CHARGE, currentTime).apply();
-                prefs.edit().putInt(KEY_CHARGE_START_LEVEL, (int) batteryPct).apply();
-                
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putLong(KEY_LAST_FULL_CHARGE, currentTime);
+                editor.putInt(KEY_CHARGE_START_LEVEL, (int) batteryPct);
+
+                // Capture deep sleep baseline at this moment: elapsedRealtime - uptimeMillis
+                long deepBase = android.os.SystemClock.elapsedRealtime() - android.os.SystemClock.uptimeMillis();
+                editor.putLong(KEY_DEEP_SLEEP_BASE, deepBase);
+
+                editor.apply();
+
                 // Create and save new charge cycle
                 ChargeCycle newCycle = new ChargeCycle(currentTime, (int) batteryPct);
                 dataManager.addChargeCycle(newCycle);
             }
-            
+
             // Reset the flag
             prefs.edit().putBoolean(KEY_WAS_FULL, false).apply();
         }
