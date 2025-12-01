@@ -41,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/battery_level_placeholder"
-                android:textSize="92sp"
+                android:textSize="102sp"
                 android:textColor="@color/text_color"
                 android:fontFamily="@font/productsans_black"
                 android:layout_gravity="center_horizontal" />
@@ -251,8 +251,8 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="@font/productsans_bold"
                                     android:text="Full in --"
-                                    android:textColor="@color/text_color"
-                                    android:textSize="12sp"
+                                    android:textColor="@color/text_color_alt"
+                                    android:textSize="18sp"
                                     android:layout_marginTop="4dp" />
                             </LinearLayout>
 
@@ -278,7 +278,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/about_heybattery"
                 android:textSize="18sp"
-                android:textColor="@color/text_color"
+                android:textColor="@color/text_color_alt"
                 android:fontFamily="@font/productsans_bold"
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="16dp"

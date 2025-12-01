@@ -12,6 +12,7 @@
     <!-- Light theme colors (default) -->
     <color name="background_color">#F4F4F4</color>
     <color name="text_color">#2C2C2C</color>
+    <color name="text_color_alt">#565656</color>
     <color name="header_background">#E4E4E4</color>
 
 </resources>

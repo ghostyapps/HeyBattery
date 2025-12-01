@@ -7,10 +7,29 @@
     <string name="since_80_charge">since >80% charge</string>
     <string name="no_data_yet">No data yet</string>
     <string name="deep_sleep_since_80_charge">deep sleep since >80% charge</string>
-    <string name="estimated_remaining_time">Estimated remaining time</string>
+    <string name="estimated_remaining_time">Remaining Time</string>
     <string name="not_available">Not available</string>
     <string name="charging_info">Charging info</string>
     <string name="discharging">Discharging</string>
-    <string name="about_heybattery">📎 About HeyBattery</string>
+    <string name="about_heybattery">About HeyBattery</string>
     <string name="time_to_full_placeholder">1 hour 25 minutes to full</string>
+    <string name="about_description">
+        <b>Precision Without the Drain</b>\n\n
+        Most battery apps drain your power just to measure it. HeyBattery is different. We designed this app with a "Zero Drain" philosophy. We don\'t run heavy background services; we use smart mathematics.\n\n
+        <b>How our 4 main cards work:</b>\n\n
+        <b>1. Time Since Charge</b>\n
+        \u2022 What it does: Shows exactly how long your phone has been running on battery.\n
+        \u2022 The Logic: We don\'t run a timer in the background. When you unplug your phone (above 80%), we simply save that exact timestamp. When you open the app, we calculate the difference instantly. Zero battery cost.\n\n
+        <b>2. Deep Sleep Time</b>\n
+        \u2022 What it does: Tells you how long your phone\'s processor was fully "asleep" to save power while the screen was off.\n
+        \u2022 The Logic: We read the system\'s internal "Birth Certificate" (Boot Timestamp). By comparing the total elapsed time versus the time the CPU was active, we calculate sleep duration mathematically without needing to monitor the phone constantly.\n
+        <i>Note: If this value is low or zero, it means another app is keeping your phone awake in the background.</i>\n\n
+        <b>3. Remaining Time</b>\n
+        \u2022 What it does: Predicts when your battery will die.\n
+        \u2022 The Logic: We use a "Hybrid Prediction Model". We combine your long-term usage history (40%) with your current session\'s drain rate (60%). This gives you a realistic estimate that adapts to what you are doing right now.\n\n
+        <b>4. Charging Info / Status</b>\n
+        \u2022 What it does: Displays real-time Volt, Watt, and Temperature data while charging.\n
+        \u2022 The Logic: We read raw data directly from hardware sensors. To prevent overheating, this monitoring stops completely the moment you close the app or turn off the screen.\n\n
+        <i><b>100% Private. No Internet Required. No Background Notifications.</b></i>
+    </string>
 </resources>

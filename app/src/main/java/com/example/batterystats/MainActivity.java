@@ -1,7 +1,10 @@
 package com.example.batterystats;
 
 import android.app.AppOpsManager;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -30,6 +33,10 @@ import android.os.SystemClock;
 import android.os.Handler;
 import android.os.Looper;
 
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
+
 import android.Manifest;
 import android.os.Build;
 import android.content.pm.PackageManager;
@@ -47,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView deepSleepTime;
     private TextView chargingInfo;
     private TextView timeToFullText;
-    // Charging info toggle state: 0=Watts, 1=Volts, 2=mA, 3=Time to full
+
     private int chargingInfoMode = 0;
     private int lastVoltageMv = -1;
     private int lastCurrentMicroA = 0;
@@ -55,18 +62,19 @@ public class MainActivity extends AppCompatActivity {
     private boolean lastIsCharging = false;
     private float lastBatteryPct = -1f;
 
-    // For estimating time to full while charging
+    private int lastTemperature = 0;
+
     private long lastChargeSampleTime = 0L;
     private float lastChargeSampleLevel = -1f;
-    private double avgChargeRatePerHour = 0.0; // % per hour
-    // Smoothed milliseconds taken per 1% change (updated when we observe >=1% change)
+    private double avgChargeRatePerHour = 0.0;
     private double timePerPercentMs = 0.0;
-    // Last known non-empty "time to full" text to avoid flickering back to "Calculating..."
     private String lastKnownTimeToFull = null;
-    private static final float MIN_LEVEL_CHANGE = 1.0f; // En az %1 değişim gerekli
-    private static final long MIN_TIME_BETWEEN_SAMPLES = 60_000L; // En az 60 saniye bekle
+    private static final float MIN_LEVEL_CHANGE = 1.0f;
+    private static final long MIN_TIME_BETWEEN_SAMPLES = 60_000L;
 
-    // Fake smooth battery percentage display toggle and state
+    private static final String KEY_DEEP_SLEEP_ACCUMULATED = "deep_sleep_accumulated";
+    private static final String KEY_LAST_SYSTEM_DEEP_SLEEP = "last_system_deep_sleep";
+
     private boolean smoothPercentageEnabled = true;
     private float lastRealBatteryPctForSmooth = -1f;
     private long lastRealBatteryTimeMs = 0L;
@@ -87,29 +95,27 @@ public class MainActivity extends AppCompatActivity {
                 updateBatteryInfo(batteryStatus);
             }
 
-            // Dynamic refresh: 3s while charging (Watt), 60s otherwise (timers)
             long nextDelay = isChargingNow ? 3_000 : 60_000;
             uiHandler.postDelayed(this, nextDelay);
         }
     };
 
-    // Easter egg variables
     private int tapCount = 0;
     private long firstTapTime = 0;
     private static final int REQUIRED_TAPS = 5;
-    private static final long TAP_TIMEOUT = 2000; // 2 seconds
+    private static final long TAP_TIMEOUT = 2000;
 
     private SharedPreferences prefs;
     private BatteryDataManager dataManager;
     private static final String PREFS_NAME = "BatteryStats";
+
     private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
-    private static final String KEY_CHARGE_START_LEVEL = "charge_start_level";
+    private static final String KEY_PLUG_IN_LEVEL = "plug_in_level";
+
     private static final String KEY_ASKED_BATTERY_OPT = "asked_battery_opt";
     private static final String KEY_ASKED_USAGE_STATS = "asked_usage_stats";
-    private static final String KEY_BASE_DEEP_SLEEP = "base_deep_sleep";
-    private static final String KEY_BASE_DEEP_SLEEP_ELAPSED = "base_deep_sleep_elapsed";
-    private static final String KEY_WAS_FULL = "was_full";
     private static final String KEY_PREV_CHARGING = "prev_charging";
+
     private static final int REQUEST_BATTERY_OPTIMIZATION = 1001;
     private static final int REQUEST_USAGE_STATS = 1002;
 
@@ -124,12 +130,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Apply saved theme preference before setting content view
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int themePreference = prefs.getInt("theme_preference", 0);
         applyTheme(themePreference);
 
-        // Request notification permission (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -137,14 +141,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Make status bar match header color from theme (light/dark aware)
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
         int headerColor = ContextCompat.getColor(this, R.color.header_background);
         getWindow().setStatusBarColor(headerColor);
 
-        // Ensure status bar icons are readable in light/dark
         boolean isNight = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 
@@ -161,9 +163,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (batteryPercentage != null) {
             batteryPercentage.setOnClickListener(v -> {
-                // Toggle fake smooth percentage on tap
                 smoothPercentageEnabled = !smoothPercentageEnabled;
-                // Force an immediate refresh using current battery intent
                 IntentFilter tapFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
                 Intent tapStatus = registerReceiver(null, tapFilter);
                 if (tapStatus != null) {
@@ -172,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
         timeSinceCharge = findViewById(R.id.timeSinceCharge);
-        // remainingTime id might not exist in XML; resolve dynamically to avoid R.id compile error
         int remainingTimeId = getResources().getIdentifier("remainingTime", "id", getPackageName());
         remainingTime = remainingTimeId != 0 ? findViewById(remainingTimeId) : null;
         headerLogo = findViewById(R.id.headerLogo);
@@ -180,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
         chargingInfo = findViewById(R.id.chargingInfo);
         timeToFullText = findViewById(R.id.timeToFullText);
 
-        // Set charging hint icon drawable according to theme
         ImageView chargingHintIcon = findViewById(R.id.chargingHintIcon);
         if (chargingHintIcon != null) {
             int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
@@ -195,11 +193,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // 4. kartın tamamını tıklanabilir yap
         View chargingCard = findViewById(R.id.card_charging_info);
         if (chargingCard != null) {
             chargingCard.setOnClickListener(v -> {
-                // 0 = Watts, 1 = Volts, 2 = mA
                 chargingInfoMode = (chargingInfoMode + 1) % 3;
                 refreshChargingInfoText();
             });
@@ -207,12 +203,10 @@ public class MainActivity extends AppCompatActivity {
 
         dataManager = new BatteryDataManager(this);
 
-        // Set up easter egg tap listener on header logo
         if (headerLogo != null) {
             headerLogo.setOnClickListener(v -> handleGreetingTap());
         }
 
-        // Set up About button click listener
         TextView aboutButton = findViewById(R.id.aboutButton);
         if (aboutButton != null) {
             aboutButton.setOnClickListener(v -> {
@@ -221,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Set up footer signature click listener (GitHub link)
         TextView footerSignature = findViewById(R.id.footerSignature);
         if (footerSignature != null) {
             footerSignature.setOnClickListener(v -> {
@@ -231,29 +224,33 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Start the background battery monitoring service
-        startBatteryMonitorService();
-
-        // Check and request permissions
         checkPermissions();
 
-        // Register battery receiver
+        // Sessiz İşçiyi Planla (Tuzağı Kur)
+        scheduleSilentJob(this);
+
+        // Receiver'ı onCreate içinde kaydediyoruz
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
 
-        // Initial update
+        // İlk veriyi al
         Intent batteryStatus = registerReceiver(null, filter);
         if (batteryStatus != null) {
             updateBatteryInfo(batteryStatus);
         }
     }
 
-    private void startBatteryMonitorService() {
-        Intent serviceIntent = new Intent(this, BatteryMonitorService.class);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
+    // Servis yerine JobScheduler planla
+    private void scheduleSilentJob(Context context) {
+        ComponentName componentName = new ComponentName(context, ChargingJobService.class);
+        JobInfo info = new JobInfo.Builder(123, componentName)
+                .setRequiresCharging(true)
+                .setPersisted(true)
+                .build();
+
+        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+        if (scheduler != null) {
+            scheduler.schedule(info);
         }
     }
 
@@ -267,18 +264,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        // UI güncellemesini durduruyoruz
         uiHandler.removeCallbacks(uiUpdater);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(batteryReceiver);
+        try {
+            unregisterReceiver(batteryReceiver);
+        } catch (Exception e) {
+        }
         uiHandler.removeCallbacks(uiUpdater);
     }
 
     private void checkPermissions() {
-        // First check battery optimization
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         String packageName = getPackageName();
 
@@ -287,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
         if (!powerManager.isIgnoringBatteryOptimizations(packageName) && !askedBatteryOpt) {
             showBatteryOptimizationDialog();
         } else {
-            // Then check usage stats permission
             checkUsageStatsPermission();
         }
     }
@@ -375,7 +374,6 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Battery tracking may be less accurate", Toast.LENGTH_LONG).show();
             }
-            // After battery opt, check usage stats
             checkUsageStatsPermission();
         } else if (requestCode == REQUEST_USAGE_STATS) {
             if (hasUsageStatsPermission()) {
@@ -388,25 +386,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBatteryInfo(Intent intent) {
         long now = System.currentTimeMillis();
-        // Get battery level
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         float batteryPct = (level / (float) scale) * 100;
         lastBatteryPct = batteryPct;
 
-        // Track last real battery percentage value and time for fake smoothing
         if (lastRealBatteryPctForSmooth < 0f) {
             lastRealBatteryPctForSmooth = batteryPct;
             lastRealBatteryTimeMs = now;
         } else {
-            // If OS-reported level changed by at least ~1%, reset the baseline
             if (Math.abs(batteryPct - lastRealBatteryPctForSmooth) >= 0.5f) {
                 lastRealBatteryPctForSmooth = batteryPct;
                 lastRealBatteryTimeMs = now;
             }
         }
 
-        // Compute display percentage (optionally fake-smooth between integer steps)
         float displayPct = batteryPct;
         if (smoothPercentageEnabled && timePerPercentMs > 0.0 && batteryPct > 0f && batteryPct < 100f
                 && lastRealBatteryTimeMs > 0L) {
@@ -414,41 +408,68 @@ public class MainActivity extends AppCompatActivity {
             if (elapsedSinceReal > 0L) {
                 double extraPercent = elapsedSinceReal / timePerPercentMs;
                 if (extraPercent < 0.0) extraPercent = 0.0;
-                // Do not exceed almost the next integer step; keep within current + 0.99
                 double maxExtra = 0.99;
                 displayPct = (float) Math.min(batteryPct + extraPercent, batteryPct + maxExtra);
             }
         }
 
-        // Update battery percentage as integer without decimals
         String formatted = String.format(Locale.US, "%.0f%%", displayPct);
         batteryPercentage.setText(formatted);
 
-        long lastFullCharge = prefs.getLong(KEY_LAST_FULL_CHARGE, 0);
+        // =================================================================
+        // --- DEEP SLEEP HESAPLAMA ---
+        // =================================================================
 
-        // --- Deep Sleep Calculation (since >80% charge) ---
         long currentElapsed = SystemClock.elapsedRealtime();
-        long currentDeep = currentElapsed - SystemClock.uptimeMillis();
+        long currentUptime = SystemClock.uptimeMillis();
+        long currentSessionDeepSleep = currentElapsed - currentUptime;
 
-        long baseDeep = prefs.getLong(KEY_BASE_DEEP_SLEEP, 0);
-        long baseElapsed = prefs.getLong(KEY_BASE_DEEP_SLEEP_ELAPSED, 0);
-        boolean wasFull = prefs.getBoolean(KEY_WAS_FULL, false);
+        long currentBootTimestamp = System.currentTimeMillis() - currentElapsed;
 
-        // Determine charging state
+        long accumulatedDeepSleep = prefs.getLong(KEY_DEEP_SLEEP_ACCUMULATED, 0);
+        long lastSystemDeepSleep = prefs.getLong(KEY_LAST_SYSTEM_DEEP_SLEEP, -1);
+        long lastBootTimestamp = prefs.getLong("last_boot_timestamp", 0);
+
+        long deltaDeep = 0;
+
+        if (Math.abs(currentBootTimestamp - lastBootTimestamp) > 10_000) {
+            // Cihaz yeniden başlamış!
+            deltaDeep = currentSessionDeepSleep;
+            prefs.edit().putLong("last_boot_timestamp", currentBootTimestamp).apply();
+        }
+        else if (lastSystemDeepSleep != -1) {
+            long diff = currentSessionDeepSleep - lastSystemDeepSleep;
+            if (diff >= 0) {
+                deltaDeep = diff;
+            }
+        }
+
+        accumulatedDeepSleep += deltaDeep;
+
+        // Değerleri kaydet
+        prefs.edit()
+                .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
+                .putLong(KEY_DEEP_SLEEP_ACCUMULATED, accumulatedDeepSleep)
+                .apply();
+
+        if (deepSleepTime != null) {
+            deepSleepTime.setText(formatTimeDuration(accumulatedDeepSleep));
+        }
+        // =================================================================
+
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
 
-        // Cache latest charging measurements for toggle display
         lastIsCharging = isCharging;
         lastVoltageMv = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         lastCurrentMicroA = (bm != null) ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) : 0;
         lastWatts = computeWatts(lastVoltageMv, lastCurrentMicroA);
 
-        // Track charge rate in % per hour while charging
+        lastTemperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
+
         updateChargeRateEstimate(isCharging, batteryPct);
 
-        // Kartın altındaki "Full in ..." metnini güncelle
         if (timeToFullText != null) {
             timeToFullText.setText(getTimeToFullText());
         }
@@ -456,155 +477,124 @@ public class MainActivity extends AppCompatActivity {
         refreshChargingInfoText();
 
         boolean prevCharging = prefs.getBoolean(KEY_PREV_CHARGING, false);
+        long lastFullCharge = prefs.getLong(KEY_LAST_FULL_CHARGE, 0);
 
-        // If a new charging session starts
+        // --- ŞARJ BAŞLANGIÇ MANTIĞI ---
         if (isCharging && !prevCharging) {
-            if (batteryPct >= 80) {
-                // Already >=80% at plug-in: treat as reached >=80% now
+            prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int)batteryPct).apply();
+        }
+
+        // --- ŞARJ BİTİŞ & SIFIRLAMA MANTIĞI ---
+        if (!isCharging && prevCharging) {
+            boolean shouldReset = false;
+            int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 0);
+
+            if (batteryPct >= 100) {
+                shouldReset = true;
+            }
+            else if (batteryPct >= 80) {
+                if (startLevel < 80) {
+                    shouldReset = true;
+                }
+            }
+
+            if (shouldReset) {
+                lastFullCharge = now;
+                accumulatedDeepSleep = 0;
+
                 prefs.edit()
-                        .putBoolean(KEY_WAS_FULL, true)
-                        .putLong(KEY_BASE_DEEP_SLEEP, currentDeep)
-                        .putLong(KEY_BASE_DEEP_SLEEP_ELAPSED, currentElapsed)
+                        .putLong(KEY_LAST_FULL_CHARGE, now)
+                        .putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0)
+                        .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
                         .apply();
-                baseDeep = currentDeep;
-                baseElapsed = currentElapsed;
-                wasFull = true;
-            } else {
-                // New session below 80%
-                prefs.edit().putBoolean(KEY_WAS_FULL, false).apply();
-                wasFull = false;
+
+                if (deepSleepTime != null) deepSleepTime.setText(formatTimeDuration(0));
             }
         }
 
-        // Set baseline once per session when we first reach >=80% while charging
-        if (batteryPct >= 80 && isCharging && !wasFull) {
-            prefs.edit()
-                    .putBoolean(KEY_WAS_FULL, true)
-                    .putLong(KEY_BASE_DEEP_SLEEP, currentDeep)
-                    .putLong(KEY_BASE_DEEP_SLEEP_ELAPSED, currentElapsed)
-                    .apply();
-            baseDeep = currentDeep;
-            baseElapsed = currentElapsed;
-            wasFull = true;
-        }
-
-        // If charging session ends (unplug) after reaching >=80%, record a new baseline time
-        if (!isCharging && prevCharging && wasFull) {
-            prefs.edit()
-                    .putBoolean(KEY_WAS_FULL, false)
-                    .putLong(KEY_LAST_FULL_CHARGE, now)
-                    .putInt(KEY_CHARGE_START_LEVEL, Math.round(batteryPct))
-                    .putLong(KEY_BASE_DEEP_SLEEP, currentDeep)
-                    .putLong(KEY_BASE_DEEP_SLEEP_ELAPSED, currentElapsed)
-                    .apply();
-            baseDeep = currentDeep;
-            baseElapsed = currentElapsed;
-            wasFull = false;
-            lastFullCharge = now; // update local copy so UI resets immediately
-        }
-
-        // Persist current charging state
         prefs.edit().putBoolean(KEY_PREV_CHARGING, isCharging).apply();
 
-        // Update time since last >=80% charge (after possible baseline change)
         if (lastFullCharge > 0) {
             long timeDiff = System.currentTimeMillis() - lastFullCharge;
             String timeString = formatTimeDuration(timeDiff);
             timeSinceCharge.setText(timeString);
-
-            // Update current cycle data
             dataManager.updateCurrentCycle(System.currentTimeMillis(), (int) batteryPct);
         } else {
             timeSinceCharge.setText("No data yet");
         }
 
-        long deepSince80 = (baseDeep > 0) ? (currentDeep - baseDeep) : 0;
-        long elapsedSince80 = (baseElapsed > 0) ? (currentElapsed - baseElapsed) : 0;
-
-        // Guard against impossible values: deep sleep cannot exceed elapsed time since baseline
-        if (deepSince80 > elapsedSince80) {
-            deepSince80 = elapsedSince80;
-        }
-
-        if (deepSleepTime != null) {
-            if (baseDeep <= 0) {
-                // No baseline yet
-                deepSleepTime.setText("No data yet");
-            } else if (deepSince80 <= 0) {
-                // Baseline exists but no deep sleep accumulated
-                deepSleepTime.setText("0 minutes");
-            } else {
-                deepSleepTime.setText(formatTimeDuration(deepSince80));
-            }
-        }
-        // --- End Deep Sleep Calculation ---
-
-        // Calculate and update remaining time estimate using average drain rate
+        // --- HİBRİT KALAN SÜRE HESABI (EKLENDİ) ---
         if (remainingTime != null) {
             if (lastFullCharge > 0 && batteryPct < 100) {
-                double avgDrainRate = dataManager.getAverageDrainRate();
 
-                if (avgDrainRate > 0) {
-                    double hoursRemaining = batteryPct / avgDrainRate;
-                    long millisRemaining = (long) (hoursRemaining * 3600000);
-                    String remainingString = formatTimeDuration(millisRemaining);
-                    remainingTime.setText(remainingString);
-                } else {
-                    // Fallback to current cycle calculation if no historical data
-                    long timeDiff = System.currentTimeMillis() - lastFullCharge;
-                    int startLevel = prefs.getInt(KEY_CHARGE_START_LEVEL, 100);
-                    float percentUsed = startLevel - batteryPct;
+                // 1. Geçmiş Verilerden Ortalama Hız (%/saat)
+                double historicalDrainRate = dataManager.getAverageDrainRate();
 
-                    if (percentUsed > 0 && timeDiff > 0) {
-                        double drainRatePerHour = (percentUsed / (timeDiff / 3600000.0));
+                // 2. Anlık Tüketim Hızı (%/saat) - Şimdiki oturumdan hesapla
+                long timeDiff = System.currentTimeMillis() - lastFullCharge;
+                int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 100);
+                if (startLevel <= 0) startLevel = 100;
 
-                        if (drainRatePerHour > 0) {
-                            double hoursRemaining = batteryPct / drainRatePerHour;
-                            long millisRemaining = (long) (hoursRemaining * 3600000);
-                            String remainingString = formatTimeDuration(millisRemaining);
-                            remainingTime.setText(remainingString);
-                        } else {
-                            remainingTime.setText("Calculating...");
-                        }
-                    } else {
+                float percentUsed = startLevel - batteryPct;
+                double currentSessionDrainRate = 0;
+
+                if (timeDiff > 0 && percentUsed > 0) {
+                    double hoursElapsed = timeDiff / 3600000.0;
+                    currentSessionDrainRate = percentUsed / hoursElapsed;
+                }
+
+                // 3. Hibrit Hız Hesaplama
+                double finalDrainRate = 0;
+
+                if (historicalDrainRate > 0 && currentSessionDrainRate > 0) {
+                    // %60 Anlık, %40 Geçmiş
+                    finalDrainRate = (currentSessionDrainRate * 0.6) + (historicalDrainRate * 0.4);
+                }
+                else if (currentSessionDrainRate > 0) {
+                    finalDrainRate = currentSessionDrainRate;
+                }
+                else if (historicalDrainRate > 0) {
+                    finalDrainRate = historicalDrainRate;
+                }
+
+                // 4. Sonucu Yazdır
+                if (finalDrainRate > 0) {
+                    double hoursRemaining = batteryPct / finalDrainRate;
+
+                    if (hoursRemaining > 200) {
                         remainingTime.setText("Calculating...");
+                    } else {
+                        long millisRemaining = (long) (hoursRemaining * 3600000);
+                        remainingTime.setText(formatTimeDuration(millisRemaining));
                     }
+                } else {
+                    remainingTime.setText("Calculating...");
                 }
             } else {
                 remainingTime.setText("Not available");
             }
         }
-
     }
-
-
 
     private String formatTimeDuration(long millis) {
         long hours = TimeUnit.MILLISECONDS.toHours(millis);
         long minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60;
 
-        // If less than 1 hour, show only minutes
         if (hours == 0) {
-            if (minutes == 1) {
-                return "1 minute";
+            if (minutes <= 1) {
+                return "1 minute"; // 0-1 dk arası
             } else {
-                return String.format("%d minutes", minutes);
+                return String.format(Locale.US, "%d minutes", minutes);
             }
         }
-        // If 1 hour or more, show hours and minutes
         else {
+            String hUnit = (hours == 1) ? "hour" : "hours";
             if (minutes == 0) {
-                // Exactly X hours
-                if (hours == 1) {
-                    return "1 hour";
-                } else {
-                    return String.format("%d hours", hours);
-                }
-            } else {
-                // X hours and Y minutes
-                String hourPart = (hours == 1) ? "1 hour" : String.format("%d hours", hours);
-                String minutePart = (minutes == 1) ? "1 minute" : String.format("%d minutes", minutes);
-                return String.format("%s and %s", hourPart, minutePart);
+                return String.format(Locale.US, "%d %s", hours, hUnit);
+            }
+            else {
+                String mUnit = (minutes == 1) ? "minute" : "minutes";
+                return String.format(Locale.US, "%d %s %d %s", hours, hUnit, minutes, mUnit);
             }
         }
     }
@@ -621,34 +611,33 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        String mainText = "";
         if (chargingInfoMode == 0) { // W
-            if (lastWatts > 0) {
-                chargingInfo.setText(String.format("%.1f W", lastWatts));
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE_SP);
-            } else {
-                chargingInfo.setText("charging");
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, SMALL_SP);
-            }
+            if (lastWatts > 0) mainText = String.format(Locale.US, "%.1f W", lastWatts);
+            else mainText = "charging";
         } else if (chargingInfoMode == 1) { // V
-            if (lastVoltageMv > 0) {
-                chargingInfo.setText(String.format("%.2f V", lastVoltageMv / 1000.0));
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE_SP);
-            } else {
-                chargingInfo.setText("N/A");
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, SMALL_SP);
-            }
-        } else { // chargingInfoMode == 2 -> mA
-            if (lastCurrentMicroA != 0) {
-                chargingInfo.setText(String.format("%d mA", Math.round(Math.abs(lastCurrentMicroA) / 1000.0f)));
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE_SP);
-            } else {
-                chargingInfo.setText("N/A");
-                chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, SMALL_SP);
-            }
+            if (lastVoltageMv > 0) mainText = String.format(Locale.US, "%.2f V", lastVoltageMv / 1000.0);
+            else mainText = "N/A";
+        } else { // mA
+            if (lastCurrentMicroA != 0) mainText = String.format(Locale.US, "%d mA", Math.round(Math.abs(lastCurrentMicroA) / 1000.0f));
+            else mainText = "N/A";
+        }
+
+        int tempC = Math.round(lastTemperature / 10.0f);
+        String tempText = "\n" + tempC + "°C";
+
+        if (mainText.equals("charging") || mainText.equals("N/A")) {
+            chargingInfo.setText(mainText + tempText);
+            chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, SMALL_SP);
+        } else {
+            SpannableString spannable = new SpannableString(mainText + tempText);
+            spannable.setSpan(new RelativeSizeSpan(0.5f), mainText.length(), spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            chargingInfo.setText(spannable);
+            chargingInfo.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE_SP);
         }
     }
 
-    // Track charge rate in % per hour while charging
     private void updateChargeRateEstimate(boolean isCharging, float batteryPct) {
         long now = System.currentTimeMillis();
 
@@ -657,79 +646,67 @@ public class MainActivity extends AppCompatActivity {
                 long deltaMs = now - lastChargeSampleTime;
                 float deltaLevel = batteryPct - lastChargeSampleLevel;
 
-                // Sadece yeterli zaman geçtiyse ve yeterli seviye değişimi olduysa hesapla
                 if (deltaMs >= MIN_TIME_BETWEEN_SAMPLES && deltaLevel >= MIN_LEVEL_CHANGE) {
                     double hours = deltaMs / 3600000.0;
-                    double instantRate = deltaLevel / hours; // % per hour
+                    double instantRate = deltaLevel / hours;
 
-                    // Makul olmayan değerleri filtrele (çok hızlı veya çok yavaş şarj)
-                    // Örnek: %1-50 per hour arası kabul et
                     if (instantRate >= 1.0 && instantRate <= 50.0) {
                         if (avgChargeRatePerHour <= 0.0) {
                             avgChargeRatePerHour = instantRate;
                         } else {
-                            // Smooth using exponential moving average
                             avgChargeRatePerHour = 0.6 * avgChargeRatePerHour + 0.4 * instantRate;
                         }
                     }
 
-                    // ms-per-percent smoothing (for time to full)
-                    double instantMsPerPercent = (double) deltaMs / deltaLevel; // ms per 1%
-
-                    // Makul olmayan değerleri filtrele
-                    // En az 30 saniye, en fazla 10 dakika per %1
-                    final double MIN_MS_PER_PERCENT = 30_000.0; // 30 saniye
-                    final double MAX_MS_PER_PERCENT = 600_000.0; // 10 dakika
+                    double instantMsPerPercent = (double) deltaMs / deltaLevel;
+                    final double MIN_MS_PER_PERCENT = 30_000.0;
+                    final double MAX_MS_PER_PERCENT = 600_000.0;
 
                     if (instantMsPerPercent >= MIN_MS_PER_PERCENT &&
                             instantMsPerPercent <= MAX_MS_PER_PERCENT) {
                         if (timePerPercentMs <= 0.0) {
                             timePerPercentMs = instantMsPerPercent;
                         } else {
-                            // Smooth the ms-per-percent
                             timePerPercentMs = 0.6 * timePerPercentMs + 0.4 * instantMsPerPercent;
                         }
                     }
 
-                    // Ölçüm yapıldı, yeni baseline güncelle
                     lastChargeSampleTime = now;
                     lastChargeSampleLevel = batteryPct;
                 }
-                // Eğer yeterli değişim yoksa, sadece zamanı kontrol et
-                // 5 dakikadan fazla veri yoksa, baseline'ı güncelle
                 else if (deltaMs >= 300_000L) {
                     lastChargeSampleTime = now;
                     lastChargeSampleLevel = batteryPct;
                 }
             } else {
-                // İlk ölçüm
                 lastChargeSampleTime = now;
                 lastChargeSampleLevel = batteryPct;
             }
         } else {
-            // Reset when not charging or already full
             lastChargeSampleTime = 0L;
             lastChargeSampleLevel = -1f;
             avgChargeRatePerHour = 0.0;
-            timePerPercentMs = 0.0; // Bunu da sıfırlayın
-            lastKnownTimeToFull = null; // Yeni oturumda baştan hesaplanacak
+            timePerPercentMs = 0.0;
+            lastKnownTimeToFull = null;
         }
     }
 
-    // Returns a human-readable "time to full" while charging
     private String getTimeToFullText() {
         if (!lastIsCharging) return "";
 
         if (lastBatteryPct < 0f) {
-            // If we don't yet have a valid reading, prefer the last known estimate if available
             return (lastKnownTimeToFull != null) ? lastKnownTimeToFull : "N/A";
         }
-        if (lastBatteryPct >= 99.5f) {
-            lastKnownTimeToFull = "Almost full";
+        if (lastBatteryPct >= 99.9f) {
+            lastKnownTimeToFull = "Full";
             return lastKnownTimeToFull;
         }
+        if (lastBatteryPct >= 99f) {
+            lastKnownTimeToFull = "Almost full";
+            return lastKnownTimeToFull;
 
-        // Prefer ms-per-percent based estimate
+        }
+
         if (timePerPercentMs > 0.0) {
             double remainingPercent = Math.max(0.0, 100.0 - lastBatteryPct);
             long millisRemaining = (long) (timePerPercentMs * remainingPercent);
@@ -764,14 +741,11 @@ public class MainActivity extends AppCompatActivity {
                 sb.append(minutes).append(minutes == 1 ? " minute" : " minutes");
             }
 
-            String result = sb.toString();
-            lastKnownTimeToFull = result;
-            return result;
+            lastKnownTimeToFull = sb.toString();
+            return lastKnownTimeToFull;
         }
 
-        // Fallback to %/hour based estimate
         if (avgChargeRatePerHour <= 0.0) {
-            // If we don't have enough fresh data, keep showing the last known estimate
             return (lastKnownTimeToFull != null) ? lastKnownTimeToFull : "Calculating...";
         }
 
@@ -790,14 +764,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         long oneMinuteMillis = 60_000L;
-        long oneDayMillis = 24L * 3600_000L;
-
         if (millisRemaining < oneMinuteMillis) {
             lastKnownTimeToFull = "Less than 1 minute";
-            return lastKnownTimeToFull;
-        }
-        if (millisRemaining > oneDayMillis) {
-            lastKnownTimeToFull = "More than 24 hours";
             return lastKnownTimeToFull;
         }
 
@@ -835,14 +803,11 @@ public class MainActivity extends AppCompatActivity {
     private void handleGreetingTap() {
         long currentTime = System.currentTimeMillis();
 
-        // Reset if too much time has passed
         if (currentTime - firstTapTime > TAP_TIMEOUT) {
             tapCount = 1;
             firstTapTime = currentTime;
         } else {
             tapCount++;
-
-            // Check if we reached the required taps
             if (tapCount >= REQUIRED_TAPS) {
                 tapCount = 0;
                 firstTapTime = 0;
@@ -853,7 +818,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showThemeSelectionDialog() {
         final String[] themes = {"System Default", "Light", "Dark"};
-        int currentTheme = prefs.getInt("theme_preference", 0); // 0=System, 1=Light, 2=Dark
+        int currentTheme = prefs.getInt("theme_preference", 0);
 
         new AlertDialog.Builder(this)
                 .setTitle("Choose Theme")
@@ -870,35 +835,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyTheme(int theme) {
         switch (theme) {
-            case 0: // System Default
+            case 0:
                 androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
                         androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 break;
-            case 1: // Light
+            case 1:
                 androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
                         androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
                 break;
-            case 2: // Dark
+            case 2:
                 androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
                         androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
                 break;
         }
-    }
-
-    private double getChargingWatts(Intent intent) {
-        int voltageMv = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1); // millivolts
-
-        BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
-        int currentMicroA = 0;
-        if (bm != null) {
-            currentMicroA = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-        }
-
-        if (voltageMv > 0 && currentMicroA != 0) {
-            double volts = voltageMv / 1000.0;
-            double amps = Math.abs(currentMicroA) / 1_000_000.0;
-            return volts * amps;
-        }
-        return -1;
     }
 }
