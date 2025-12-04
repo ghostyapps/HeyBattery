@@ -226,10 +226,9 @@ public class MainActivity extends AppCompatActivity {
 
         checkPermissions();
 
-        // Sessiz İşçiyi Planla (Tuzağı Kur)
+        // Sessiz İşçiyi Planla
         scheduleSilentJob(this);
 
-        // Receiver'ı onCreate içinde kaydediyoruz
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
 
@@ -264,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // UI güncellemesini durduruyoruz
         uiHandler.removeCallbacks(uiUpdater);
     }
 
@@ -433,7 +431,6 @@ public class MainActivity extends AppCompatActivity {
         long deltaDeep = 0;
 
         if (Math.abs(currentBootTimestamp - lastBootTimestamp) > 10_000) {
-            // Cihaz yeniden başlamış!
             deltaDeep = currentSessionDeepSleep;
             prefs.edit().putLong("last_boot_timestamp", currentBootTimestamp).apply();
         }
@@ -446,7 +443,6 @@ public class MainActivity extends AppCompatActivity {
 
         accumulatedDeepSleep += deltaDeep;
 
-        // Değerleri kaydet
         prefs.edit()
                 .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
                 .putLong(KEY_DEEP_SLEEP_ACCUMULATED, accumulatedDeepSleep)
@@ -484,32 +480,12 @@ public class MainActivity extends AppCompatActivity {
             prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int)batteryPct).apply();
         }
 
-        // --- ŞARJ BİTİŞ & SIFIRLAMA MANTIĞI ---
+        // --- ŞARJ BİTİŞ MANTIĞI (DÜZELTİLDİ: SADECE BAYRAK İNDİRİLİYOR) ---
+        // Zamanı veya diğer sayaçları sıfırlamıyoruz.
+        // Onları ChargingJobService zaten şarj süresince güncel tuttu.
+        // Biz sadece "Tamam, artık şarjda değiliz" bilgisini alıyoruz.
         if (!isCharging && prevCharging) {
-            boolean shouldReset = false;
-            int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 0);
-
-            if (batteryPct >= 100) {
-                shouldReset = true;
-            }
-            else if (batteryPct >= 80) {
-                if (startLevel < 80) {
-                    shouldReset = true;
-                }
-            }
-
-            if (shouldReset) {
-                lastFullCharge = now;
-                accumulatedDeepSleep = 0;
-
-                prefs.edit()
-                        .putLong(KEY_LAST_FULL_CHARGE, now)
-                        .putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0)
-                        .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
-                        .apply();
-
-                if (deepSleepTime != null) deepSleepTime.setText(formatTimeDuration(0));
-            }
+            prefs.edit().putBoolean(KEY_PREV_CHARGING, false).apply();
         }
 
         prefs.edit().putBoolean(KEY_PREV_CHARGING, isCharging).apply();
@@ -520,17 +496,14 @@ public class MainActivity extends AppCompatActivity {
             timeSinceCharge.setText(timeString);
             dataManager.updateCurrentCycle(System.currentTimeMillis(), (int) batteryPct);
         } else {
-            timeSinceCharge.setText("No data yet");
+            timeSinceCharge.setText("0 minute");
         }
 
-        // --- HİBRİT KALAN SÜRE HESABI (EKLENDİ) ---
         if (remainingTime != null) {
             if (lastFullCharge > 0 && batteryPct < 100) {
 
-                // 1. Geçmiş Verilerden Ortalama Hız (%/saat)
                 double historicalDrainRate = dataManager.getAverageDrainRate();
 
-                // 2. Anlık Tüketim Hızı (%/saat) - Şimdiki oturumdan hesapla
                 long timeDiff = System.currentTimeMillis() - lastFullCharge;
                 int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 100);
                 if (startLevel <= 0) startLevel = 100;
@@ -543,11 +516,9 @@ public class MainActivity extends AppCompatActivity {
                     currentSessionDrainRate = percentUsed / hoursElapsed;
                 }
 
-                // 3. Hibrit Hız Hesaplama
                 double finalDrainRate = 0;
 
                 if (historicalDrainRate > 0 && currentSessionDrainRate > 0) {
-                    // %60 Anlık, %40 Geçmiş
                     finalDrainRate = (currentSessionDrainRate * 0.6) + (historicalDrainRate * 0.4);
                 }
                 else if (currentSessionDrainRate > 0) {
@@ -557,7 +528,6 @@ public class MainActivity extends AppCompatActivity {
                     finalDrainRate = historicalDrainRate;
                 }
 
-                // 4. Sonucu Yazdır
                 if (finalDrainRate > 0) {
                     double hoursRemaining = batteryPct / finalDrainRate;
 
@@ -582,7 +552,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (hours == 0) {
             if (minutes <= 1) {
-                return "1 minute"; // 0-1 dk arası
+                return "0 minute";
             } else {
                 return String.format(Locale.US, "%d minutes", minutes);
             }
@@ -704,7 +674,6 @@ public class MainActivity extends AppCompatActivity {
         if (lastBatteryPct >= 99f) {
             lastKnownTimeToFull = "Almost full";
             return lastKnownTimeToFull;
-
         }
 
         if (timePerPercentMs > 0.0) {
