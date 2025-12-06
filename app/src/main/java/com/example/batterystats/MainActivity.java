@@ -232,7 +232,6 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
 
-        // İlk veriyi al
         Intent batteryStatus = registerReceiver(null, filter);
         if (batteryStatus != null) {
             updateBatteryInfo(batteryStatus);
@@ -477,14 +476,14 @@ public class MainActivity extends AppCompatActivity {
 
         // --- ŞARJ BAŞLANGIÇ MANTIĞI ---
         if (isCharging && !prevCharging) {
+            // MainActivity açıkken takılırsa da kaydet
             prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int)batteryPct).apply();
         }
 
-        // --- ŞARJ BİTİŞ MANTIĞI (DÜZELTİLDİ: SADECE BAYRAK İNDİRİLİYOR) ---
-        // Zamanı veya diğer sayaçları sıfırlamıyoruz.
-        // Onları ChargingJobService zaten şarj süresince güncel tuttu.
-        // Biz sadece "Tamam, artık şarjda değiliz" bilgisini alıyoruz.
+        // --- ŞARJ BİTİŞ MANTIĞI (DÜZELTİLDİ) ---
         if (!isCharging && prevCharging) {
+            // Sadece bayrağı indiriyoruz.
+            // Zamanı ve Reset işlemlerini ChargingJobService halletti.
             prefs.edit().putBoolean(KEY_PREV_CHARGING, false).apply();
         }
 
