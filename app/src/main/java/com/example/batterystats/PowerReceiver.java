@@ -64,6 +64,9 @@ public class PowerReceiver extends BroadcastReceiver {
             long currentUptime = SystemClock.uptimeMillis();
             long currentSessionDeepSleep = currentElapsed - currentUptime;
 
+            // ÖNEMLİ: KEY_LAST_FULL_CHARGE şarjdan ÇIKTIĞIMIZ anı kaydeder,
+            // pil %100'e ulaştığı anı değil. Böylece kullanıcı şarjdan çıktığı
+            // andan itibaren geçen süreyi görür (ör: 20:00'da %100, 21:00'da çıktıysa → 1 hour)
             editor.putLong(KEY_LAST_FULL_CHARGE, now);
             editor.putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0L);
             editor.putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep);

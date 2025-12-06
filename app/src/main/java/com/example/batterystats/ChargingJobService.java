@@ -124,6 +124,8 @@ public class ChargingJobService extends JobService {
 
                 // Deep sleep baz çizgisini güncelle, ama "son 80% şarj zamanı"nı
                 // sadece fişten çekildiğinde yazacağız.
+                // ÖNEMLİ: KEY_LAST_FULL_CHARGE burada GÜNCELLENMİYOR çünkü şarj hala devam ediyor.
+                // Zamanı sadece şarjdan çıktığımızda (recordUnplugEvent) kaydedeceğiz.
                 prefs.edit()
                         .putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0)
                         .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
@@ -162,11 +164,18 @@ public class ChargingJobService extends JobService {
             int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 0);
             boolean shouldReset = false;
 
+            // Senin istediğin mantık:
+            // - Şarj esnasında 80+'a ulaştıysa
+            // - Ya da zaten 80+ iken takılıp 80+'da çıkarıldıysa
             if (batteryPct >= 100) {
                 shouldReset = true;
             }
             else if (batteryPct >= 80) {
                 if (startLevel < 80) {
+                    // 70 → 85 gibi
+                    shouldReset = true;
+                } else {
+                    // Zaten 80+ iken takıldı, 80+ iken çıktı
                     shouldReset = true;
                 }
             }
@@ -176,6 +185,9 @@ public class ChargingJobService extends JobService {
                 long currentUptime = SystemClock.uptimeMillis();
                 long currentSessionDeepSleep = currentElapsed - currentUptime;
 
+                // ÖNEMLİ: KEY_LAST_FULL_CHARGE şarjdan ÇIKTIĞIMIZ anı kaydeder,
+                // pil %100'e ulaştığı anı değil. Böylece kullanıcı şarjdan çıktığı
+                // andan itibaren geçen süreyi görür (ör: 20:00'da %100, 21:00'da çıktıysa → 1 hour)
                 prefs.edit()
                         .putLong(KEY_LAST_FULL_CHARGE, now)
                         .putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0)
