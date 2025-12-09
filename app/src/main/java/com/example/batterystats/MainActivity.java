@@ -1,49 +1,43 @@
 package com.example.batterystats;
 
+import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AppOpsManager;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.BatteryManager;
-import android.graphics.Color;
-import android.view.WindowManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.provider.Settings;
-import android.widget.TextView;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
+import android.util.TypedValue;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import java.util.concurrent.TimeUnit;
-import android.content.res.Configuration;
-
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import android.os.SystemClock;
-import android.os.Handler;
-import android.os.Looper;
-
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.RelativeSizeSpan;
-
-import android.Manifest;
-import android.os.Build;
-import android.content.pm.PackageManager;
-import android.view.View;
-import android.util.TypedValue;
-import java.io.File;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,8 +66,11 @@ public class MainActivity extends AppCompatActivity {
     private static final float MIN_LEVEL_CHANGE = 1.0f;
     private static final long MIN_TIME_BETWEEN_SAMPLES = 60_000L;
 
+    // ChargingMonitorService ile uyumlu anahtarlar
     private static final String KEY_DEEP_SLEEP_ACCUMULATED = "deep_sleep_accumulated";
     private static final String KEY_LAST_SYSTEM_DEEP_SLEEP = "last_system_deep_sleep";
+    private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
+    private static final String KEY_PLUG_IN_LEVEL = "plug_in_level";
 
     private boolean smoothPercentageEnabled = true;
     private float lastRealBatteryPctForSmooth = -1f;
@@ -109,9 +106,6 @@ public class MainActivity extends AppCompatActivity {
     private BatteryDataManager dataManager;
     private static final String PREFS_NAME = "BatteryStats";
 
-    private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
-    private static final String KEY_PLUG_IN_LEVEL = "plug_in_level";
-
     private static final String KEY_ASKED_BATTERY_OPT = "asked_battery_opt";
     private static final String KEY_ASKED_USAGE_STATS = "asked_usage_stats";
     private static final String KEY_PREV_CHARGING = "prev_charging";
@@ -119,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_BATTERY_OPTIMIZATION = 1001;
     private static final int REQUEST_USAGE_STATS = 1002;
 
-    private BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateBatteryInfo(intent);
@@ -130,37 +124,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // --- İZİN KODU (Android 13+) ---
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         int themePreference = prefs.getInt("theme_preference", 0);
         applyTheme(themePreference);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 200);
-            }
-        }
-
+        // Pencere Ayarları
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-
         int headerColor = ContextCompat.getColor(this, R.color.header_background);
         getWindow().setStatusBarColor(headerColor);
 
         boolean isNight = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-
         WindowInsetsControllerCompat insets =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-
         if (insets != null) {
             insets.setAppearanceLightStatusBars(!isNight);
         }
 
         setContentView(R.layout.activity_main);
 
+        // --- UI Elemanlarını Bağlama ---
         batteryPercentage = findViewById(R.id.batteryPercentage);
-
         if (batteryPercentage != null) {
             batteryPercentage.setOnClickListener(v -> {
                 smoothPercentageEnabled = !smoothPercentageEnabled;
@@ -171,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
         timeSinceCharge = findViewById(R.id.timeSinceCharge);
         int remainingTimeId = getResources().getIdentifier("remainingTime", "id", getPackageName());
         remainingTime = remainingTimeId != 0 ? findViewById(remainingTimeId) : null;
@@ -224,11 +217,13 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        // --- Başlangıç İşlemleri ---
         checkPermissions();
 
-        // Sessiz İşçiyi Planla
-        scheduleSilentJob(this);
+        // Servisi başlat
+        startPersistentService();
 
+        // Pil verilerini ilk kez al
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(batteryReceiver, filter);
 
@@ -238,23 +233,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Servis yerine JobScheduler planla
-    private void scheduleSilentJob(Context context) {
-        ComponentName componentName = new ComponentName(context, ChargingJobService.class);
-        JobInfo info = new JobInfo.Builder(123, componentName)
-                .setRequiresCharging(true)
-                .setPersisted(true)
-                .build();
-
-        JobScheduler scheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
-        if (scheduler != null) {
-            scheduler.schedule(info);
-        }
-    }
-
+    // --- KRİTİK BÖLÜM: Uygulama Öne Gelince Servisi Kontrol Et ---
     @Override
     protected void onResume() {
         super.onResume();
+
+        // KONTROLÜ KALDIRDIK. DİREKT BAŞLATIYORUZ.
+        // Bu sayede bildirim kaybolmuşsa bile uygulama açılınca %100 geri gelir.
+        startPersistentService();
+
         uiHandler.removeCallbacks(uiUpdater);
         uiHandler.post(uiUpdater);
     }
@@ -274,6 +261,21 @@ public class MainActivity extends AppCompatActivity {
         }
         uiHandler.removeCallbacks(uiUpdater);
     }
+
+    // --- Servis Yardımcı Metodları ---
+
+    private void startPersistentService() {
+        Intent serviceIntent = new Intent(this, ChargingMonitorService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+    }
+
+
+
+    // --- İzin Kontrol Metodları ---
 
     private void checkPermissions() {
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -381,6 +383,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // --- Pil Verilerini Güncelleme ve Hesaplama ---
+
     private void updateBatteryInfo(Intent intent) {
         long now = System.currentTimeMillis();
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
@@ -413,44 +417,21 @@ public class MainActivity extends AppCompatActivity {
         String formatted = String.format(Locale.US, "%.0f%%", displayPct);
         batteryPercentage.setText(formatted);
 
-        // =================================================================
-        // --- DEEP SLEEP HESAPLAMA ---
-        // =================================================================
-
+        // Deep Sleep Calculation
         long currentElapsed = SystemClock.elapsedRealtime();
         long currentUptime = SystemClock.uptimeMillis();
-        long currentSessionDeepSleep = currentElapsed - currentUptime;
+        long totalDeviceDeepSleep = currentElapsed - currentUptime;
+        long baselineDeepSleep = prefs.getLong(KEY_LAST_SYSTEM_DEEP_SLEEP, 0);
+        long deepSleepSinceCharge = totalDeviceDeepSleep - baselineDeepSleep;
 
-        long currentBootTimestamp = System.currentTimeMillis() - currentElapsed;
-
-        long accumulatedDeepSleep = prefs.getLong(KEY_DEEP_SLEEP_ACCUMULATED, 0);
-        long lastSystemDeepSleep = prefs.getLong(KEY_LAST_SYSTEM_DEEP_SLEEP, -1);
-        long lastBootTimestamp = prefs.getLong("last_boot_timestamp", 0);
-
-        long deltaDeep = 0;
-
-        if (Math.abs(currentBootTimestamp - lastBootTimestamp) > 10_000) {
-            deltaDeep = currentSessionDeepSleep;
-            prefs.edit().putLong("last_boot_timestamp", currentBootTimestamp).apply();
+        if (deepSleepSinceCharge < 0) {
+            deepSleepSinceCharge = totalDeviceDeepSleep;
+            prefs.edit().putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, 0).apply();
         }
-        else if (lastSystemDeepSleep != -1) {
-            long diff = currentSessionDeepSleep - lastSystemDeepSleep;
-            if (diff >= 0) {
-                deltaDeep = diff;
-            }
-        }
-
-        accumulatedDeepSleep += deltaDeep;
-
-        prefs.edit()
-                .putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep)
-                .putLong(KEY_DEEP_SLEEP_ACCUMULATED, accumulatedDeepSleep)
-                .apply();
 
         if (deepSleepTime != null) {
-            deepSleepTime.setText(formatTimeDuration(accumulatedDeepSleep));
+            deepSleepTime.setText(formatTimeDuration(deepSleepSinceCharge));
         }
-        // =================================================================
 
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
@@ -460,7 +441,6 @@ public class MainActivity extends AppCompatActivity {
         BatteryManager bm = (BatteryManager) getSystemService(BATTERY_SERVICE);
         lastCurrentMicroA = (bm != null) ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW) : 0;
         lastWatts = computeWatts(lastVoltageMv, lastCurrentMicroA);
-
         lastTemperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
 
         updateChargeRateEstimate(isCharging, batteryPct);
@@ -474,16 +454,13 @@ public class MainActivity extends AppCompatActivity {
         boolean prevCharging = prefs.getBoolean(KEY_PREV_CHARGING, false);
         long lastFullCharge = prefs.getLong(KEY_LAST_FULL_CHARGE, 0);
 
-        // --- ŞARJ BAŞLANGIÇ MANTIĞI ---
         if (isCharging && !prevCharging) {
-            // MainActivity açıkken takılırsa da kaydet
-            prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int)batteryPct).apply();
+            if (!prefs.contains(KEY_PLUG_IN_LEVEL)) {
+                prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int)batteryPct).apply();
+            }
         }
 
-        // --- ŞARJ BİTİŞ MANTIĞI (DÜZELTİLDİ) ---
         if (!isCharging && prevCharging) {
-            // Sadece bayrağı indiriyoruz.
-            // Zamanı ve Reset işlemlerini ChargingJobService halletti.
             prefs.edit().putBoolean(KEY_PREV_CHARGING, false).apply();
         }
 
@@ -495,14 +472,12 @@ public class MainActivity extends AppCompatActivity {
             timeSinceCharge.setText(timeString);
             dataManager.updateCurrentCycle(System.currentTimeMillis(), (int) batteryPct);
         } else {
-            timeSinceCharge.setText("0 minute");
+            timeSinceCharge.setText("No data yet");
         }
 
         if (remainingTime != null) {
             if (lastFullCharge > 0 && batteryPct < 100) {
-
                 double historicalDrainRate = dataManager.getAverageDrainRate();
-
                 long timeDiff = System.currentTimeMillis() - lastFullCharge;
                 int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, 100);
                 if (startLevel <= 0) startLevel = 100;
@@ -529,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (finalDrainRate > 0) {
                     double hoursRemaining = batteryPct / finalDrainRate;
-
                     if (hoursRemaining > 200) {
                         remainingTime.setText("Calculating...");
                     } else {
@@ -551,7 +525,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (hours == 0) {
             if (minutes <= 1) {
-                return "0 minute";
+                return "1 minute";
             } else {
                 return String.format(Locale.US, "%d minutes", minutes);
             }
@@ -804,16 +778,13 @@ public class MainActivity extends AppCompatActivity {
     private void applyTheme(int theme) {
         switch (theme) {
             case 0:
-                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                        androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 break;
             case 1:
-                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                        androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 break;
             case 2:
-                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                        androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 break;
         }
     }
