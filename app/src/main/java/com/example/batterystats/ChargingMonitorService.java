@@ -23,7 +23,8 @@ import java.util.Locale;
 public class ChargingMonitorService extends Service {
 
     private static final int NOTIFICATION_ID = 1001;
-    private static final String CHANNEL_ID = "persistent_battery_channel_v7"; // Kanal ID güncelledim
+    // Kanal ID güncel kalsın
+    private static final String CHANNEL_ID = "silent_persistent_channel_v7";
 
     // Veritabanı
     private static final String PREFS_NAME = "BatteryStats";
@@ -41,7 +42,6 @@ public class ChargingMonitorService extends Service {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel();
 
-        // 1. Servisi Güvenli Başlat
         Notification notification = buildNotification("Initializing...", false);
         try {
             if (Build.VERSION.SDK_INT >= 34) {
@@ -53,10 +53,7 @@ public class ChargingMonitorService extends Service {
             if (notificationManager != null) notificationManager.notify(NOTIFICATION_ID, notification);
         }
 
-        // 2. Hemen durumu kontrol et
         checkBatteryState();
-
-        // 3. Dinlemeye Başla
         registerBatteryReceiver();
     }
 
@@ -83,7 +80,6 @@ public class ChargingMonitorService extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        // Auto-Restart
         Intent restartServiceIntent = new Intent(getApplicationContext(), ChargingMonitorService.class);
         restartServiceIntent.setPackage(getPackageName());
         PendingIntent restartServicePendingIntent = PendingIntent.getService(
@@ -134,7 +130,6 @@ public class ChargingMonitorService extends Service {
                 .build();
     }
 
-    // Manuel Kontrol
     private void checkBatteryState() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
@@ -143,7 +138,6 @@ public class ChargingMonitorService extends Service {
         }
     }
 
-    // Otomatik Dinleyici
     private void registerBatteryReceiver() {
         batteryReceiver = new BroadcastReceiver() {
             @Override
@@ -157,7 +151,7 @@ public class ChargingMonitorService extends Service {
         registerReceiver(batteryReceiver, filter);
     }
 
-    // --- TÜM MANTIK BURADA ---
+    // --- MANTIK MERKEZİ (GÜNCELLENDİ) ---
     private void processBatteryLogic(Intent intent) {
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -171,23 +165,18 @@ public class ChargingMonitorService extends Service {
 
         // SENARYO 1: ŞARJ OLUYOR
         if (isCharging) {
-            // Eğer "plug_in_level" (başlangıç) daha önce kaydedilmemişse, ŞU AN kaydet.
-            // Örn: Kabloyu taktın, %79. Burası çalışır ve 79'u yazar.
+            // Kayıt yoksa kaydet (apply yeterli, acelesi yok)
             if (!prefs.contains(KEY_PLUG_IN_LEVEL)) {
                 prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int) batteryPct).apply();
             }
         }
-        // SENARYO 2: ŞARJ OLMUYOR (Kablo çekildi veya doldu bitti)
+        // SENARYO 2: ŞARJ OLMUYOR (Kablo çekildi)
         else {
-            // Eğer hafızada bir "Başlangıç Değeri" varsa, demek ki az önce şarjdan çekildi.
             if (prefs.contains(KEY_PLUG_IN_LEVEL)) {
                 int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, -1);
 
-                // RESET MANTIĞINI ÇALIŞTIR
-                checkAndResetStats(startLevel, batteryPct, prefs);
-
-                // Başlangıç değerini sil (Böylece döngü tamamlanır)
-                prefs.edit().remove(KEY_PLUG_IN_LEVEL).apply();
+                // DEĞİŞİKLİK: Tek bir işlemde (Transaction) hem sil hem kaydet
+                handleUnplugAndSaveSafe(startLevel, batteryPct, prefs);
             }
         }
 
@@ -203,7 +192,8 @@ public class ChargingMonitorService extends Service {
         }
     }
 
-    private void checkAndResetStats(int startLevel, float currentPct, SharedPreferences prefs) {
+    // GÜNCELLENMİŞ KAYIT METODU (YARIŞ DURUMUNU ÖNLER)
+    private void handleUnplugAndSaveSafe(int startLevel, float currentPct, SharedPreferences prefs) {
         boolean shouldReset = false;
 
         // Kural 1: %100'e ulaştıysa -> Reset
@@ -211,13 +201,15 @@ public class ChargingMonitorService extends Service {
             shouldReset = true;
         }
         // Kural 2: 80'i geçtiyse VE 80'den aşağıda başladıysa -> Reset
-        // Örn: Start=79, Current=81 -> (81>=80 && 79<80) -> TRUE -> RESET
         else if (currentPct >= 80f && startLevel < 80) {
             shouldReset = true;
         }
 
+        // Editör oluştur
+        SharedPreferences.Editor editor = prefs.edit();
+
+        // 1. Resetlenecekse yeni verileri hazneye koy
         if (shouldReset) {
-            SharedPreferences.Editor editor = prefs.edit();
             long currentElapsed = SystemClock.elapsedRealtime();
             long currentUptime = SystemClock.uptimeMillis();
             long currentSessionDeepSleep = currentElapsed - currentUptime;
@@ -225,7 +217,14 @@ public class ChargingMonitorService extends Service {
             editor.putLong(KEY_LAST_FULL_CHARGE, System.currentTimeMillis());
             editor.putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0L);
             editor.putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep);
-            editor.apply();
         }
+
+        // 2. "Plug Level" verisini silme emrini DE aynı hazneye koy
+        editor.remove(KEY_PLUG_IN_LEVEL);
+
+        // 3. HEPSİNİ TEK SEFERDE VE ZORLA YAZ (COMMIT)
+        // apply() yerine commit() kullanıyoruz ki sistem uygulamayı öldürmeden önce
+        // dosyanın diske yazıldığından %100 emin olalım.
+        editor.commit();
     }
 }

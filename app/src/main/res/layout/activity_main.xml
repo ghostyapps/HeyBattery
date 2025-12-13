@@ -30,9 +30,9 @@
 
             <ImageView
                 android:id="@+id/headerLogo"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/battery_icon_cropped"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/battery_simple"
                 android:layout_gravity="center_horizontal"
                 android:contentDescription="@string/header_logo" />
 

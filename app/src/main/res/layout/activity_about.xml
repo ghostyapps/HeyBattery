@@ -26,9 +26,9 @@
 
             <ImageView
                 android:id="@+id/aboutHeaderLogo"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/battery_icon_cropped"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/battery_simple"
                 android:contentDescription="About header logo" />
 
             <FrameLayout
@@ -157,7 +157,7 @@
             android:textColor="@color/text_color"
             android:fontFamily="@font/productsans_medium"
             android:gravity="center"
-            android:text="Version 0.1.0"
+            android:text="@string/aboutVersion"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"
             android:layout_marginTop="48dp"
