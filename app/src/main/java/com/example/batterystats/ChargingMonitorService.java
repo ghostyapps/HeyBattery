@@ -14,6 +14,7 @@ import android.content.pm.ServiceInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 
 import androidx.core.app.NotificationCompat;
 
@@ -23,8 +24,12 @@ public class ChargingMonitorService extends Service {
 
     private static final int NOTIFICATION_ID = 1001;
     private static final String CHANNEL_ID = "silent_persistent_channel_v7";
+
     private static final String PREFS_NAME = "BatteryStats";
     private static final String KEY_PLUG_IN_LEVEL = "plug_in_level";
+    private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
+    private static final String KEY_DEEP_SLEEP_ACCUMULATED = "deep_sleep_accumulated";
+    private static final String KEY_LAST_SYSTEM_DEEP_SLEEP = "last_system_deep_sleep";
 
     private BroadcastReceiver batteryReceiver;
     private NotificationManager notificationManager;
@@ -35,7 +40,7 @@ public class ChargingMonitorService extends Service {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel();
 
-        Notification notification = buildNotification("Monitoring battery...", false);
+        Notification notification = buildNotification("Initializing...", false);
         try {
             if (Build.VERSION.SDK_INT >= 34) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
@@ -46,12 +51,14 @@ public class ChargingMonitorService extends Service {
             if (notificationManager != null) notificationManager.notify(NOTIFICATION_ID, notification);
         }
 
+        // Servis başlar başlamaz durumu kontrol et
         checkBatteryState();
         registerBatteryReceiver();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Servis her tetiklendiğinde kontrol et
         checkBatteryState();
         return START_STICKY;
     }
@@ -144,36 +151,78 @@ public class ChargingMonitorService extends Service {
         registerReceiver(batteryReceiver, filter);
     }
 
+    // --- KRİTİK MANTIK BÖLÜMÜ ---
     private void processBatteryLogic(Intent intent) {
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
 
         float batteryPct = (level / (float) scale) * 100f;
-        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+        boolean isChargingNow = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
 
-        // SENARYO 1: ŞARJ OLUYORSA KAYDET
-        if (isCharging) {
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            // Eğer daha önce kaydedilmemişse, şu anki seviyeyi kaydet
-            if (!prefs.contains(KEY_PLUG_IN_LEVEL)) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+
+        // Dosyada "Başlangıç Seviyesi" var mı kontrol et
+        boolean hasPlugInRecord = prefs.contains(KEY_PLUG_IN_LEVEL);
+
+        if (isChargingNow) {
+            // ŞARJ OLUYOR
+            // Eğer kayıt yoksa, şu anki seviyeyi başlangıç olarak kaydet
+            if (!hasPlugInRecord) {
                 prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int) batteryPct).apply();
+            }
+        } else {
+            // ŞARJ OLMUYOR (DISCHARGING)
+            // Eğer "Başlangıç Kaydı" varsa, demek ki AZ ÖNCE kablo çekildi!
+            // Çünkü kablo çekilmese kayıt olmazdı.
+            if (hasPlugInRecord) {
+                int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, -1);
+
+                // Resetleme mantığını çalıştır
+                performResetCheck(startLevel, batteryPct, prefs);
+
+                // Kaydı sil (Artık discharge modundayız)
+                // commit() kullanıyoruz ki servis ölmeden kesin yazılsın
+                prefs.edit().remove(KEY_PLUG_IN_LEVEL).commit();
             }
         }
 
-        // DİKKAT: Unplug mantığını buradan TAMAMEN kaldırdık.
-        // Onu PowerConnectionReceiver yapacak.
-
         // Bildirim Güncelle
         String statusText;
-        if (isCharging) {
+        if (isChargingNow) {
             statusText = (batteryPct >= 100) ? "Fully Charged" : String.format(Locale.US, "Charging: %.0f%%", batteryPct);
         } else {
             statusText = String.format(Locale.US, "Discharging: %.0f%%", batteryPct);
         }
         if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, buildNotification(statusText, isCharging));
+            notificationManager.notify(NOTIFICATION_ID, buildNotification(statusText, isChargingNow));
+        }
+    }
+
+    private void performResetCheck(int startLevel, float currentPct, SharedPreferences prefs) {
+        boolean shouldReset = false;
+
+        // Kural 1: %100 olduysa KESİN Reset.
+        if (currentPct >= 100f) {
+            shouldReset = true;
+        }
+        // Kural 2: %80'i geçtiyse VE %80'in altında başladıysa Reset.
+        else if (currentPct >= 80f && startLevel < 80) {
+            shouldReset = true;
+        }
+
+        if (shouldReset) {
+            long currentElapsed = SystemClock.elapsedRealtime();
+            long currentUptime = SystemClock.uptimeMillis();
+            long currentSessionDeepSleep = currentElapsed - currentUptime;
+
+            // Verileri COMMIT ile kaydet (Atomik işlem)
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putLong(KEY_LAST_FULL_CHARGE, System.currentTimeMillis());
+            editor.putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0L);
+            editor.putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep);
+            editor.commit(); // apply() değil commit()!
         }
     }
 }

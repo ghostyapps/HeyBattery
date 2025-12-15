@@ -13,7 +13,7 @@
     <string name="discharging">Discharging</string>
     <string name="about_heybattery">About HeyBattery</string>
     <string name="time_to_full_placeholder">1 hour 25 minutes to full</string>
-    <string name="aboutVersion">Version 0.1.1"</string>
+    <string name="aboutVersion">Version 0.1.4"</string>
     <string name="about_description">
         <b>Precision Without the Drain</b>\n\n
         Most battery apps drain your power just to measure it. HeyBattery is different. We designed this app with a "Zero Drain" philosophy. We don\'t run heavy background services; we use smart mathematics.\n\n
