@@ -14,7 +14,6 @@ import android.content.pm.ServiceInfo;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.SystemClock;
 
 import androidx.core.app.NotificationCompat;
 
@@ -23,15 +22,9 @@ import java.util.Locale;
 public class ChargingMonitorService extends Service {
 
     private static final int NOTIFICATION_ID = 1001;
-    // Kanal ID güncel kalsın
     private static final String CHANNEL_ID = "silent_persistent_channel_v7";
-
-    // Veritabanı
     private static final String PREFS_NAME = "BatteryStats";
     private static final String KEY_PLUG_IN_LEVEL = "plug_in_level";
-    private static final String KEY_LAST_FULL_CHARGE = "last_full_charge";
-    private static final String KEY_DEEP_SLEEP_ACCUMULATED = "deep_sleep_accumulated";
-    private static final String KEY_LAST_SYSTEM_DEEP_SLEEP = "last_system_deep_sleep";
 
     private BroadcastReceiver batteryReceiver;
     private NotificationManager notificationManager;
@@ -42,7 +35,7 @@ public class ChargingMonitorService extends Service {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel();
 
-        Notification notification = buildNotification("Initializing...", false);
+        Notification notification = buildNotification("Monitoring battery...", false);
         try {
             if (Build.VERSION.SDK_INT >= 34) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
@@ -151,7 +144,6 @@ public class ChargingMonitorService extends Service {
         registerReceiver(batteryReceiver, filter);
     }
 
-    // --- MANTIK MERKEZİ (GÜNCELLENDİ) ---
     private void processBatteryLogic(Intent intent) {
         int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
@@ -161,26 +153,19 @@ public class ChargingMonitorService extends Service {
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
 
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-
-        // SENARYO 1: ŞARJ OLUYOR
+        // SENARYO 1: ŞARJ OLUYORSA KAYDET
         if (isCharging) {
-            // Kayıt yoksa kaydet (apply yeterli, acelesi yok)
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+            // Eğer daha önce kaydedilmemişse, şu anki seviyeyi kaydet
             if (!prefs.contains(KEY_PLUG_IN_LEVEL)) {
                 prefs.edit().putInt(KEY_PLUG_IN_LEVEL, (int) batteryPct).apply();
             }
         }
-        // SENARYO 2: ŞARJ OLMUYOR (Kablo çekildi)
-        else {
-            if (prefs.contains(KEY_PLUG_IN_LEVEL)) {
-                int startLevel = prefs.getInt(KEY_PLUG_IN_LEVEL, -1);
 
-                // DEĞİŞİKLİK: Tek bir işlemde (Transaction) hem sil hem kaydet
-                handleUnplugAndSaveSafe(startLevel, batteryPct, prefs);
-            }
-        }
+        // DİKKAT: Unplug mantığını buradan TAMAMEN kaldırdık.
+        // Onu PowerConnectionReceiver yapacak.
 
-        // BİLDİRİM GÜNCELLEME
+        // Bildirim Güncelle
         String statusText;
         if (isCharging) {
             statusText = (batteryPct >= 100) ? "Fully Charged" : String.format(Locale.US, "Charging: %.0f%%", batteryPct);
@@ -190,41 +175,5 @@ public class ChargingMonitorService extends Service {
         if (notificationManager != null) {
             notificationManager.notify(NOTIFICATION_ID, buildNotification(statusText, isCharging));
         }
-    }
-
-    // GÜNCELLENMİŞ KAYIT METODU (YARIŞ DURUMUNU ÖNLER)
-    private void handleUnplugAndSaveSafe(int startLevel, float currentPct, SharedPreferences prefs) {
-        boolean shouldReset = false;
-
-        // Kural 1: %100'e ulaştıysa -> Reset
-        if (currentPct >= 100f) {
-            shouldReset = true;
-        }
-        // Kural 2: 80'i geçtiyse VE 80'den aşağıda başladıysa -> Reset
-        else if (currentPct >= 80f && startLevel < 80) {
-            shouldReset = true;
-        }
-
-        // Editör oluştur
-        SharedPreferences.Editor editor = prefs.edit();
-
-        // 1. Resetlenecekse yeni verileri hazneye koy
-        if (shouldReset) {
-            long currentElapsed = SystemClock.elapsedRealtime();
-            long currentUptime = SystemClock.uptimeMillis();
-            long currentSessionDeepSleep = currentElapsed - currentUptime;
-
-            editor.putLong(KEY_LAST_FULL_CHARGE, System.currentTimeMillis());
-            editor.putLong(KEY_DEEP_SLEEP_ACCUMULATED, 0L);
-            editor.putLong(KEY_LAST_SYSTEM_DEEP_SLEEP, currentSessionDeepSleep);
-        }
-
-        // 2. "Plug Level" verisini silme emrini DE aynı hazneye koy
-        editor.remove(KEY_PLUG_IN_LEVEL);
-
-        // 3. HEPSİNİ TEK SEFERDE VE ZORLA YAZ (COMMIT)
-        // apply() yerine commit() kullanıyoruz ki sistem uygulamayı öldürmeden önce
-        // dosyanın diske yazıldığından %100 emin olalım.
-        editor.commit();
     }
 }
