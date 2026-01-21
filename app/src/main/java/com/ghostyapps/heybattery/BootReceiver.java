@@ -1,4 +1,4 @@
-package com.example.batterystats;
+package com.ghostyapps.heybattery;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

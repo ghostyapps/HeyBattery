@@ -1,4 +1,4 @@
-package com.example.batterystats;
+package com.ghostyapps.heybattery;
 
 import android.os.Bundle;
 import androidx.annotation.Nullable;

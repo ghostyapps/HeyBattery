@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.batterystats'
+    namespace 'com.ghostyapps.heybattery'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.batterystats"
+        applicationId "com.ghostyapps.heybattery"
         minSdk 24
         targetSdk 34
         versionCode 1

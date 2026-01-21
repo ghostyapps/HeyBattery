@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.batterystats">
+    package="com.ghostyapps.heybattery">
 
     <!-- İZİNLER (Tek ve Temiz) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -22,7 +22,7 @@
         android:theme="@style/Theme.BatteryStats">
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.ghostyapps.heybattery.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,11 +30,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".AboutActivity" android:exported="false" />
+        <activity android:name="com.ghostyapps.heybattery.AboutActivity" android:exported="false" />
 
         <!-- BOOT RECEIVER -->
         <receiver
-            android:name=".BootReceiver"
+            android:name="com.ghostyapps.heybattery.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -45,7 +45,7 @@
 
         <!-- POWER RECEIVER (GÜNCELLENDİ: directBootAware eklendi) -->
         <receiver
-            android:name=".PowerConnectionReceiver"
+            android:name="com.ghostyapps.heybattery.PowerConnectionReceiver"
             android:enabled="true"
             android:exported="true"
             android:directBootAware="true">
@@ -57,7 +57,7 @@
 
         <!-- SERVICE (TÜRÜ KONTROL EDİN) -->
         <service
-            android:name=".ChargingMonitorService"
+            android:name="com.ghostyapps.heybattery.ChargingMonitorService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />

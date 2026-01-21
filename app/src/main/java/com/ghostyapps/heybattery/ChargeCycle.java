@@ -1,4 +1,4 @@
-package com.example.batterystats;
+package com.ghostyapps.heybattery;
 
 public class ChargeCycle {
     public long fullChargeTimestamp;

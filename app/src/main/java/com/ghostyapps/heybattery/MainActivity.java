@@ -1,7 +1,6 @@
-package com.example.batterystats;
+package com.ghostyapps.heybattery;
 
 import android.Manifest;
-import android.app.ActivityManager;
 import android.app.AppOpsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;

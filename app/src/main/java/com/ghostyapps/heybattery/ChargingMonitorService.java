@@ -1,4 +1,4 @@
-package com.example.batterystats;
+package com.ghostyapps.heybattery;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
